@@ -1,7 +1,17 @@
-
-
 # Lion Vibes (Demo)
 
-App estático para autoconhecimento por voz/ritmo. Exercite sua auto percepção e eleve-se.
+App estático (HTML/CSS/JS) para **autoconhecimento por ritmo de voz**.
 
-Não é instrumento clínico. Não faz diagnóstico. É um espelho de interação.
+- Captura de microfone no navegador
+- 1 gráfico (overlay com 8 linhas)
+- Meta (linha tracejada) + decay (queda lenta)
+- Relatório (últimos 5 min) salvo no dispositivo
+- Tokens internos (gamificação — sem valor financeiro)
+
+> Ética: não é diagnóstico. É treino e espelho de interação.
+
+## Rodar
+Abra `index.html` via GitHub Pages.
+
+## GitHub Pages
+Settings → Pages → Deploy from branch → `main` / `(root)`
