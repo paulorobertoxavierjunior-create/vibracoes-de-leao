@@ -1,52 +1,64 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lion Vibes — Conexão</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
   <div class="bg"></div>
 
-  <main class="center">
-    <div class="card hero"> 
+  <main class="container narrow">
+    <section class="card center">
       <div class="brandBig">
-        <img class="logoBig" src="logo.jpg" alt="Lion Vibes"/>
-        <div>
-          <div class="h1">Lion Vibes</div>
-          <div class="sub">Espelho de ritmo • voz • presença (demo)</div>
-        </div>
+        <div class="mark" id="mark"></div>
+        <div class="t1">Lion Vibes</div>
+        <div class="t2">Autoconhecimento por ritmo • Demo</div>
       </div>
 
-      <p class="muted" style="margin-top:14px">
-        Um app de autoconsciência por voz. Sem diagnóstico. Sem “mágica”.
-        <br/>Você fala, observa, ajusta e melhora.
+      <p class="muted center" style="margin-top:10px">
+        Bem-vindo(a). Esta é uma demo de espelho de interação por áudio.<br/>
+        Não é diagnóstico, não é medicina, não promete cura — é treino e consciência.
       </p>
 
-      <div class="actions" style="margin-top:16px">
-        <button class="btn primary" id="btnConnect">Iniciar conexão</button>
+      <div class="field" style="margin-top:14px">
+        <label for="code">Senha de acesso</label>
+        <input id="code" inputmode="numeric" placeholder="Digite a senha" />
       </div>
 
-      <div class="mini" style="margin-top:12px">
-        <div class="pill info">Tudo roda no seu navegador</div>
-        <div class="pill warn">Microfone será solicitado depois</div>
+      <div class="actions" style="justify-content:center">
+        <button class="btn primary" id="btn">Iniciar conexão</button>
       </div>
 
-      <p class="tiny muted" style="margin-top:10px">
-        Acesso demo com código simples (não é segurança real).
+      <p class="muted center" style="font-size:12px;margin-top:10px">
+        Dica: use fone/mic próximo. Um ambiente calmo melhora a leitura do seu próprio ritmo.
       </p>
-    </div>
+    </section>
   </main>
 
-  <script src="assets/storage.js"></script>
-  <script src="assets/gate.js"></script>
+  <script src="assets/core.js"></script>
   <script>
-    // Clique -> pede código -> vai para intro
-    document.getElementById("btnConnect").addEventListener("click", ()=>{
-      // Código demo simples (você pode mudar depois)
-      // Dica: você diz o código para quem recebeu o link.
-      window.LION.gate.requirePasscodeOrRedirect("intro.html");
+    // mostra logo.png se existir
+    (function(){
+      const mark = document.getElementById("mark");
+      const img = new Image();
+      img.onload = ()=>{ mark.innerHTML = ""; mark.appendChild(img); img.className="logoBig"; };
+      img.onerror = ()=>{ mark.textContent = "LV"; mark.classList.add("fallback"); };
+      img.src = "logo.png";
+    })();
+
+    document.getElementById("btn").addEventListener("click", ()=>{
+      const code = (document.getElementById("code").value || "").trim();
+      if(!code){ alert("Digite a senha."); return; }
+      if(code !== "12345"){ alert("Senha incorreta."); return; }
+      LV.set("lv_auth", { ok:true, at: Date.now() });
+      location.href = "welcome.html";
+    });
+
+    // enter
+    document.getElementById("code").addEventListener("keydown",(e)=>{
+      if(e.key==="Enter") document.getElementById("btn").click();
     });
   </script>
 </body>
