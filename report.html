@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Lion Vibes — Relatórios</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+  <div class="bg"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <img class="logoImg" src="logo.jpg" alt="Lion Vibes"/>
+      </div>
+      <div>
+        <div class="brand-title">Relatórios</div>
+        <div class="brand-sub">Congelamento do gráfico + resumo</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="link" href="intro.html">Tutorial</a>
+      <a class="link" href="app.html">Voltar pro app</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card" id="single" style="display:none">
+      <h1>Relatório</h1>
+      <p class="muted" id="meta"></p>
+
+      <div class="card soft">
+        <div style="font-weight:800;margin-bottom:8px">Gráfico congelado</div>
+        <img id="imgSnap" class="snap" alt="Gráfico congelado"/>
+      </div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div class="kpi" id="k1"></div>
+        <div class="kpi" id="k2"></div>
+      </div>
+
+      <hr/>
+      <h2>Texto (para copiar)</h2>
+      <textarea id="txt" class="bigText" rows="14"></textarea>
+
+      <div class="actions">
+        <button class="btn" id="btnCopy">Copiar</button>
+        <button class="btn danger" id="btnDelete">Excluir</button>
+        <a class="btn" href="report.html">Voltar para lista</a>
+      </div>
+    </section>
+
+    <section class="card" id="list">
+      <h1>Últimos relatórios (máx. 10)</h1>
+      <p class="muted">Tudo fica armazenado no dispositivo. Ao encher, exclua alguns.</p>
+
+      <div class="actions">
+        <button class="btn danger" id="btnDeleteAll">Excluir todos</button>
+      </div>
+
+      <div id="items" style="margin-top:10px"></div>
+    </section>
+  </main>
+
+  <footer class="footer"><span>Lion Vibes • Relatórios</span></footer>
+
+  <script src="assets/storage.js"></script>
+  <script src="assets/report.js"></script>
+</body>
+</html>
