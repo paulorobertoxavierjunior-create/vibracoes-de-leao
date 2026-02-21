@@ -1,120 +1,138 @@
+// assets/report.js
 (function(){
-  const id = new URL(location.href).searchParams.get("id");
-  const single = document.getElementById("single");
-  const list = document.getElementById("list");
-
-  const reports = LION.store.getReports();
-
+  function getParam(name){
+    const u = new URL(location.href);
+    return u.searchParams.get(name);
+  }
   function fmt(ts){
     return new Date(ts).toLocaleString();
   }
 
-  function buildText(r){
-    const labels = [
-      "Presença","Impulso","Fluxo","Pausa OK","Entonação","Foco","Harmonia","Clareza"
-    ];
-    const last = r.last || [];
-    const mean = r.mean || [];
+  const id = getParam("id");
+  const list = LV.loadReports();
 
-    const linesLast = labels.map((n,i)=>`- ${n}: ${(last[i]??0).toFixed(3)}`).join("\n");
-    const linesMean = labels.map((n,i)=>`- ${n}: ${(mean[i]??0).toFixed(3)}`).join("\n");
+  const single = document.getElementById("single");
+  const listBox = document.getElementById("list");
+  const items = document.getElementById("items");
 
-    return `LION VIBES — RELATÓRIO (DEMO)
-Data/hora: ${fmt(r.createdAt)}
-ID: ${r.id}
+  function drawOverlay(canvas, series, goal){
+    const cv = canvas;
+    const ctx = cv.getContext("2d");
 
-Objetivo:
-${r.goal || "(não informado)"}
+    // escala p/ canvas real
+    const W = cv.clientWidth || 900;
+    const H = Math.round(W*0.46);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.floor(W*dpr);
+    cv.height = Math.floor(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
 
-Observação:
-${r.note || "(não informado)"}
+    ctx.fillStyle="#fff";
+    ctx.fillRect(0,0,W,H);
 
-Tokens (no momento):
-${r.tokensNow ?? 0}
+    // meta
+    const yGoal = H - (goal/100)*H;
+    ctx.save();
+    ctx.setLineDash([6,6]);
+    ctx.strokeStyle="#2a6f88";
+    ctx.globalAlpha=0.85;
+    ctx.beginPath();
+    ctx.moveTo(0,yGoal);
+    ctx.lineTo(W,yGoal);
+    ctx.stroke();
+    ctx.restore();
 
-Resumo (última leitura):
-${linesLast}
+    const laneH = H / 8;
+    for(let i=0;i<8;i++){
+      const top = i*laneH;
+      const mid = top + laneH/2;
 
-Média (janela salva):
-${linesMean}
+      ctx.strokeStyle="#00000012";
+      ctx.beginPath();
+      ctx.moveTo(0,mid);
+      ctx.lineTo(W,mid);
+      ctx.stroke();
 
-Nota:
-- Isso é um espelho de treino por voz/ritmo.
-- Não é instrumento clínico e não faz diagnóstico.
-`;
-  }
+      const s = series[i] || [];
+      const n = s.length;
+      if(n<2) continue;
 
-  function saveAll(arr){
-    LION.store.saveReports(arr);
+      ctx.strokeStyle="#111";
+      ctx.lineWidth=1.6;
+      ctx.beginPath();
+      for(let k=0;k<n;k++){
+        const x = (k/(n-1))*(W-1);
+        const v = s[k];
+        const y = top + (1 - v) * (laneH-18) + 18;
+        if(k===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle="#2b4d5b";
+      ctx.font="12px system-ui";
+      const names = ["RMS","20–60","60–120","120–250","250–500","500–1k","1–2k","2–4k"];
+      ctx.fillText(`${i}) ${names[i]}`, 10, top+14);
+    }
   }
 
   if(id){
-    const r = reports.find(x=>x.id===id);
-    if(!r){
+    const rep = list.find(r=>r.id===id);
+    if(!rep){
       alert("Relatório não encontrado.");
-      location.href = "report.html";
+      location.href="report.html";
       return;
     }
 
-    single.style.display = "block";
-    list.style.display = "none";
+    single.style.display="block";
+    listBox.style.display="none";
 
-    document.getElementById("meta").textContent = `Criado em ${fmt(r.createdAt)} • ID ${r.id}`;
-    const img = document.getElementById("imgSnap");
-    img.src = r.snapPng;
-
-    document.getElementById("k1").textContent =
-      `Objetivo:\n${r.goal || "(não informado)"}`;
-
-    document.getElementById("k2").textContent =
-      `Tokens no momento:\n${r.tokensNow ?? 0}`;
+    document.getElementById("meta").textContent =
+      `ID: ${rep.id} • ${fmt(rep.at)} • Pessoa: ${rep.who} • Modo: ${rep.mode}`;
 
     const txt = document.getElementById("txt");
-    txt.value = buildText(r);
+    txt.value = rep.text;
+
+    const cv2 = document.getElementById("cv2");
+    drawOverlay(cv2, rep.series, rep.goal);
 
     document.getElementById("btnCopy").addEventListener("click", async ()=>{
       try{
         await navigator.clipboard.writeText(txt.value);
         alert("Copiado.");
       }catch{
-        txt.select();
-        document.execCommand("copy");
-        alert("Copiado (modo compatível).");
+        txt.select(); document.execCommand("copy");
+        alert("Copiado (compatível).");
       }
     });
 
-    document.getElementById("btnDelete").addEventListener("click", ()=>{
-      if(confirm("Excluir este relatório do dispositivo?")){
-        const out = reports.filter(x=>x.id!==id);
-        saveAll(out);
-        location.href = "report.html";
-      }
+    document.getElementById("btnDel").addEventListener("click", ()=>{
+      if(!confirm("Excluir este relatório?")) return;
+      const out = LV.loadReports().filter(x=>x.id!==rep.id);
+      LV.saveReports(out);
+      location.href="report.html";
     });
 
-  } else {
-    const items = document.getElementById("items");
-    const btnDeleteAll = document.getElementById("btnDeleteAll");
-
-    btnDeleteAll.addEventListener("click", ()=>{
-      if(confirm("Excluir TODOS os relatórios do dispositivo?")){
-        saveAll([]);
-        location.reload();
-      }
+  }else{
+    // lista
+    document.getElementById("btnDelAll").addEventListener("click", ()=>{
+      if(!confirm("Excluir TODOS os relatórios?")) return;
+      LV.saveReports([]);
+      location.reload();
     });
 
-    if(!reports.length){
+    if(!list.length){
       items.innerHTML = `<p class="muted">Nenhum relatório salvo ainda.</p>`;
       return;
     }
 
-    items.innerHTML = reports.map(r=>{
+    items.innerHTML = list.map(r=>{
       return `
         <div class="card soft" style="margin-top:10px">
-          <div class="row" style="justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div class="row" style="justify-content:space-between; align-items:center;">
             <div>
-              <div style="font-weight:1000">Relatório</div>
-              <div class="muted tiny">${fmt(r.createdAt)} • ID ${r.id}</div>
-              <div class="tiny muted" style="margin-top:6px">${(r.goal||"").slice(0,70)}</div>
+              <div style="font-weight:900">${r.who} • ${r.mode}</div>
+              <div class="muted" style="font-size:12px">${fmt(r.at)} • meta ${r.goal}</div>
             </div>
             <div class="row">
               <a class="btn" href="report.html?id=${encodeURIComponent(r.id)}">Abrir</a>
@@ -128,11 +146,10 @@ Nota:
     items.querySelectorAll("[data-del]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         const rid = btn.getAttribute("data-del");
-        if(confirm("Excluir este relatório?")){
-          const out = reports.filter(x=>x.id!==rid);
-          saveAll(out);
-          location.reload();
-        }
+        if(!confirm("Excluir este relatório?")) return;
+        const out = LV.loadReports().filter(x=>x.id!==rid);
+        LV.saveReports(out);
+        location.reload();
       });
     });
   }
