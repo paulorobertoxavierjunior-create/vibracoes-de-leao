@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Lion Vibes — App</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+  <div class="bg"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <img class="logoImg" src="logo.jpg" alt="Lion Vibes"/>
+      </div>
+      <div>
+        <div class="brand-title">Lion Vibes</div>
+        <div class="brand-sub">Espelho de ritmo em tempo real</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="link" href="intro.html">Tutorial</a>
+      <a class="link" href="report.html">Relatórios</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="row" style="justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h1 style="margin:0">Sessão</h1>
+          <div class="muted">Mostra o <b>último trecho</b> (até 5 min) e gera relatório ao exportar.</div>
+        </div>
+        <div class="mini">
+          <div class="pill ok" id="pillStatus">Pronto</div>
+          <div class="pill info" id="pillTime">00:00</div>
+          <div class="pill warn" id="pillTokens">Tokens: 0</div>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:12px">
+        <button class="btn primary" id="btnStart">Iniciar</button>
+        <button class="btn" id="btnPause" disabled>Pausar</button>
+        <button class="btn danger" id="btnStop" disabled>Encerrar</button>
+        <button class="btn" id="btnExport" disabled>Exportar (últ. 5 min)</button>
+      </div>
+
+      <div class="grid2" style="margin-top:14px">
+        <div class="card soft">
+          <div class="row" style="justify-content:space-between">
+            <div style="font-weight:800">Gráfico (8 linhas)</div>
+            <div class="tiny muted">metas + queda lenta + picos</div>
+          </div>
+          <canvas id="cv" height="220"></canvas>
+          <div class="tiny muted" style="margin-top:8px">
+            Dica: fale com ritmo constante e intenção. Observe as metas (tracinhos).
+          </div>
+        </div>
+
+        <div class="card soft">
+          <div style="font-weight:800;margin-bottom:8px">Ajuda rápida</div>
+          <div class="tips">
+            <div class="tip"><b>Presença</b>: voz firme, sem “sumir”.</div>
+            <div class="tip"><b>Fluxo</b>: evite acelerar no fim das frases.</div>
+            <div class="tip"><b>Pausa OK</b>: respire, mas não quebre tudo.</div>
+            <div class="tip"><b>Entonação</b>: variação natural, sem monotonia.</div>
+            <div class="tip"><b>Foco</b>: menos ruído ao redor = melhor leitura.</div>
+            <div class="tip"><b>Tokens</b>: mantenha o “zona boa” por tempo contínuo.</div>
+          </div>
+        </div>
+      </div>
+
+      <hr/>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Objetivo do treino (texto livre)</label>
+          <input id="goal" placeholder="Ex: falar com calma por 60s, com pausas boas."/>
+        </div>
+        <div class="field">
+          <label>Observação (opcional)</label>
+          <input id="note" placeholder="Ex: ambiente silencioso / sentado / etc."/>
+        </div>
+      </div>
+
+      <p class="tiny muted" style="margin-top:10px">
+        Segurança: este app não protege dados por servidor; o conteúdo fica no seu navegador.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer"><span>Lion Vibes • Demo • HTML/CSS/JS</span></footer>
+
+  <script src="assets/storage.js"></script>
+  <script src="assets/gate.js"></script>
+  <script src="assets/audio_engine.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
