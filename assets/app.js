@@ -1,780 +1,716 @@
-/* Vibração de Leão — Prova Vale 10 (Demo GitHub Pages)
-   - Login simples (nome)
-   - Tela incentivo + treino de microfone (8 barras)
-   - Metas simples que geram tokens (demo)
-   - Prova com questões muito básicas
-   - Tentativas ilimitadas, guarda maior nota
+/* Lion Vibes — app.js (static, GitHub Pages)
+   - 8 barras ao vivo (WebAudio)
+   - metas com “tracinho” + decay
+   - tokens (localStorage)
+   - prova vale 10 (repete, guarda maior nota)
+   - salvar relatório (últimos 5 min) no localStorage
 */
 
-const STORE = {
-  STUDENT: "lion_student",
-  BEST: "lion_best_scores",
-  TOKENS: "lion_tokens",
-  TRAIN: "lion_train_state"
+const LS = {
+  tokens: "lv_tokens",
+  best: "lv_best_score",
+  reports: "lv_reports",
+  quiz: "lv_quiz_state"
 };
 
-// ========= CONFIG PRINCIPAL =========
-// Ajuste a data da prova aqui (formato YYYY-MM-DD)
-const DUE_DATE = "2026-03-05";
+const MAX_REPORTS = 10;
+const WINDOW_SEC = 300; // últimos 5 minutos
+const FPS = 12;         // atualização das barras
+const DT = 1 / FPS;
 
-// Troque aqui pelo nome real da sua logo no repositório
-const LOGO_SRC = "logo.jpg";
+const ui = {
+  bars: document.getElementById("bars"),
+  pillTokens: document.getElementById("pillTokens"),
+  pillMic: document.getElementById("pillMic"),
+  pillGoal: document.getElementById("pillGoal"),
+  coachText: document.getElementById("coachText"),
 
-// Treino máximo (5 min)
-const TRAIN_MAX_SEC = 5 * 60;
+  studentName: document.getElementById("studentName"),
+  mode: document.getElementById("mode"),
+  btnMic: document.getElementById("btnMic"),
+  btnPause: document.getElementById("btnPause"),
+  btnStop: document.getElementById("btnStop"),
+  btnSave: document.getElementById("btnSave"),
 
-// Alvos (linhas) das métricas (0..1)
-const TARGETS = {
-  presenca: 0.68,
-  impulso: 0.55,
-  fluxo: 0.62,
-  constancia: 0.60,
-  pausaOk: 0.50,
-  entonacao: 0.55,
-  foco: 0.60,
-  harmonia: 0.65
+  testDate: document.getElementById("testDate"),
+  level: document.getElementById("level"),
+  btnStartQuiz: document.getElementById("btnStartQuiz"),
+  btnResetBest: document.getElementById("btnResetBest"),
+  quizBox: document.getElementById("quizBox"),
+  qTitle: document.getElementById("qTitle"),
+  choices: document.getElementById("choices"),
+  btnSubmit: document.getElementById("btnSubmit"),
+  btnNext: document.getElementById("btnNext"),
+  quizResult: document.getElementById("quizResult"),
+  bestText: document.getElementById("bestText")
 };
 
-// ========= UTIL =========
-function readJSON(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
-  } catch {
-    return fallback;
-  }
+function nowTs(){ return Date.now(); }
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function fmt1(x){ return (Math.round(x * 100) / 100).toFixed(2); }
+function readJSON(key, fallback){
+  try { return JSON.parse(localStorage.getItem(key) || ""); } catch { return fallback; }
 }
-function writeJSON(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-function fmtDate(iso) {
-  const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("pt-BR");
-}
-function clamp01(x) {
-  return Math.max(0, Math.min(1, x));
-}
-function mmss(sec) {
-  sec = Math.max(0, Math.floor(sec));
-  const m = String(Math.floor(sec / 60)).padStart(2, "0");
-  const s = String(sec % 60).padStart(2, "0");
-  return `${m}:${s}`;
-}
-function uid() {
-  return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
-}
+function writeJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
 
-// ========= STATE =========
-let student = readJSON(STORE.STUDENT, null);
-let tokensObj = readJSON(STORE.TOKENS, { tokens: 0, updatedAt: Date.now() });
-let best = readJSON(STORE.BEST, {}); // { levelId: bestScore10 }
-let currentLevel = 0;
-let currentQ = 0;
-let answers = {}; // {qId: optionIndex}
+function getTokens(){ return Number(localStorage.getItem(LS.tokens) || "0"); }
+function setTokens(v){ localStorage.setItem(LS.tokens, String(Math.max(0, Math.floor(v)))); renderTokens(); }
+function addTokens(n){ setTokens(getTokens() + n); }
+function renderTokens(){ ui.pillTokens.textContent = `Tokens: ${getTokens()}`; }
 
-// ========= UI REFS =========
-const elLogo = document.getElementById("logoImg");
+/* ---------- BARRAS ---------- */
 
-const screenLogin = document.getElementById("screenLogin");
-const screenWelcome = document.getElementById("screenWelcome");
-const screenExam = document.getElementById("screenExam");
-const screenResult = document.getElementById("screenResult");
-
-const pillDue = document.getElementById("pillDue");
-const pillBest = document.getElementById("pillBest");
-const pillLevel = document.getElementById("pillLevel");
-
-const studentName = document.getElementById("studentName");
-const studentClass = document.getElementById("studentClass");
-const btnConnect = document.getElementById("btnConnect");
-
-const welcomeText = document.getElementById("welcomeText");
-const kpi1 = document.getElementById("kpi1");
-const kpi2 = document.getElementById("kpi2");
-
-const btnGoExam = document.getElementById("btnGoExam");
-
-// Treino (microfone)
-const btnMic = document.getElementById("btnMic");
-const btnStartTrain = document.getElementById("btnStartTrain");
-const btnStopTrain = document.getElementById("btnStopTrain");
-const trainStatus = document.getElementById("trainStatus");
-const trainTimer = document.getElementById("trainTimer");
-const trainToken = document.getElementById("trainToken");
-const barsWrap = document.getElementById("bars");
-
-const m1 = document.getElementById("m1");
-const m2 = document.getElementById("m2");
-const m3 = document.getElementById("m3");
-const m1ok = document.getElementById("m1ok");
-const m2ok = document.getElementById("m2ok");
-const m3ok = document.getElementById("m3ok");
-
-// Prova
-const examKpi = document.getElementById("examKpi");
-const examKpi2 = document.getElementById("examKpi2");
-const questionBox = document.getElementById("questionBox");
-const btnPrev = document.getElementById("btnPrev");
-const btnNext = document.getElementById("btnNext");
-const btnFinish = document.getElementById("btnFinish");
-const btnResetStudent = document.getElementById("btnResetStudent");
-
-// Resultado
-const resultText = document.getElementById("resultText");
-const resKpi1 = document.getElementById("resKpi1");
-const resKpi2 = document.getElementById("resKpi2");
-const btnRetry = document.getElementById("btnRetry");
-const btnBackHome = document.getElementById("btnBackHome");
-
-// ========= DADOS DA PROVA (BEM BÁSICO) =========
-const LEVELS = [
-  {
-    id: "nivel1",
-    name: "Nível 1 — Conceitos",
-    questions: [
-      {
-        id: "q1",
-        text: "O que é um algoritmo?",
-        options: [
-          "Uma sequência de passos para resolver um problema",
-          "Um tipo de computador",
-          "Um cabo de internet",
-          "Uma tela do celular"
-        ],
-        correct: 0
-      },
-      {
-        id: "q2",
-        text: "O que é um bit?",
-        options: [
-          "Uma unidade básica de informação (0 ou 1)",
-          "Um tipo de bateria",
-          "Um aplicativo de música",
-          "Um teclado"
-        ],
-        correct: 0
-      },
-      {
-        id: "q3",
-        text: "Para que serve uma linguagem de programação?",
-        options: [
-          "Para dar instruções ao computador",
-          "Para fazer o computador dormir",
-          "Para aumentar o volume do celular",
-          "Para trocar a cor do monitor"
-        ],
-        correct: 0
-      }
-    ]
-  },
-  {
-    id: "nivel2",
-    name: "Nível 2 — Lógica simples",
-    questions: [
-      {
-        id: "q4",
-        text: "Se eu digo: 'Repita 3 vezes: Olá', isso é um exemplo de…",
-        options: ["Repetição (laço)", "Erro", "Imagem", "Senha"],
-        correct: 0
-      },
-      {
-        id: "q5",
-        text: "Se eu digo: 'Se estiver chovendo, pegue guarda-chuva', isso é…",
-        options: ["Condição (se/então)", "Som", "Tela", "Cálculo avançado"],
-        correct: 0
-      }
-    ]
-  },
-  {
-    id: "nivel3",
-    name: "Nível 3 — Pensamento computacional",
-    questions: [
-      {
-        id: "q6",
-        text: "Qual é a melhor forma de resolver um problema grande?",
-        options: [
-          "Dividir em partes menores (decomposição)",
-          "Fazer tudo de uma vez sem pensar",
-          "Esperar alguém fazer",
-          "Apagar tudo e desistir"
-        ],
-        correct: 0
-      },
-      {
-        id: "q7",
-        text: "O que é 'debug'?",
-        options: [
-          "Encontrar e corrigir erros",
-          "Aumentar a memória do celular",
-          "Trocar a capa do notebook",
-          "Desenhar um gráfico bonito"
-        ],
-        correct: 0
-      }
-    ]
-  }
-];
-
-// ========= TREINO: 8 BARRAS (heurística visual simples) =========
-// Atenção: isso não é “métrica clínica”. É visual/educacional.
 const METRICS = [
-  { key: "presenca", label: "Presença" },
-  { key: "impulso", label: "Impulso" },
-  { key: "fluxo", label: "Fluxo" },
-  { key: "constancia", label: "Constância" },
-  { key: "pausaOk", label: "Pausa OK" },
-  { key: "entonacao", label: "Entonação" },
-  { key: "foco", label: "Foco" },
-  { key: "harmonia", label: "Harmonia" }
+  { id:"presence",  name:"Presença",        goal: 0.55 },
+  { id:"impulse",   name:"Impulso",         goal: 0.45 },
+  { id:"flow",      name:"Fluxo",           goal: 0.50 },
+  { id:"const",     name:"Constância",      goal: 0.55 },
+  { id:"pause",     name:"Pausa",           goal: 0.55 },
+  { id:"inton",     name:"Entonação",       goal: 0.45 },
+  { id:"focus",     name:"Foco",            goal: 0.50 },
+  { id:"harmony",   name:"Harmonia",        goal: 0.55 }
 ];
 
-let audioCtx = null;
-let analyser = null;
-let micStream = null;
-let rafId = null;
-let training = false;
+let barState = METRICS.map(m => ({
+  id: m.id,
+  name: m.name,
+  goal: m.goal,
+  val: 0,
+  vis: 0,       // valor “com decay” (visual)
+  hold: 0       // segundos acima da meta
+}));
 
-let trainStartedAt = 0;
-let trainAccumulated = 0; // tempo acumulado (pausar/retomar)
-let lastFrameAt = 0;
+function buildBars(){
+  ui.bars.innerHTML = "";
+  for (const m of barState){
+    const row = document.createElement("div");
+    row.className = "barRow";
+    row.innerHTML = `
+      <div class="barLbl">${m.name}</div>
+      <div class="barTrack">
+        <div class="barFill" id="fill_${m.id}"></div>
+        <div class="barGoal" id="goal_${m.id}"></div>
+      </div>
+      <div class="barVal" id="val_${m.id}">0.00</div>
+    `;
+    ui.bars.appendChild(row);
+  }
+  layoutGoals();
+}
 
-let meta1Sec = 0;
-let meta2Sec = 0;
-let meta3Sec = 0;
-let meta1Done = false;
-let meta2Done = false;
-let meta3Done = false;
+function layoutGoals(){
+  for (const m of barState){
+    const g = document.getElementById(`goal_${m.id}`);
+    if (g){
+      g.style.left = `${Math.round(m.goal * 100)}%`;
+    }
+  }
+}
 
-const smooth = {
-  rms: 0,
-  zcr: 0,
-  low: 0,
-  mid: 0,
-  high: 0
+/* ---------- AUDIO ENGINE (WebAudio) ---------- */
+
+let audio = {
+  ctx: null,
+  stream: null,
+  src: null,
+  analyser: null,
+  data: null,
+  running: false,
+  paused: true
 };
 
-function rmsFromTimeDomain(buf) {
-  let sum = 0;
-  for (let i = 0; i < buf.length; i++) {
-    const v = (buf[i] - 128) / 128;
-    sum += v * v;
-  }
-  return Math.sqrt(sum / buf.length);
-}
+async function startMic(){
+  if (audio.running && !audio.paused) return;
 
-// Zero Crossing Rate proxy (ritmo/“agitação” do sinal)
-function zcrFromTimeDomain(buf) {
-  let z = 0;
-  let prev = buf[0] - 128;
-  for (let i = 1; i < buf.length; i++) {
-    const cur = buf[i] - 128;
-    if ((prev >= 0 && cur < 0) || (prev < 0 && cur >= 0)) z++;
-    prev = cur;
-  }
-  return z / buf.length;
-}
-
-function bandAvg(freq, fromHz, toHz, sampleRate) {
-  const nyq = sampleRate / 2;
-  const from = Math.floor((fromHz / nyq) * freq.length);
-  const to = Math.floor((toHz / nyq) * freq.length);
-  let sum = 0, n = 0;
-  for (let i = Math.max(0, from); i <= Math.min(freq.length - 1, to); i++) {
-    sum += freq[i];
-    n++;
-  }
-  return n ? (sum / n) / 255 : 0;
-}
-
-function lerp(a, b, t) { return a + (b - a) * t; }
-
-function metricsFromAudio(timeData, freqData) {
-  const rms = clamp01(rmsFromTimeDomain(timeData) * 2.8); // ganho p/ visual
-  const zcr = clamp01(zcrFromTimeDomain(timeData) * 8.0);
-
-  // bandas simples
-  const low = clamp01(bandAvg(freqData, 80, 250, audioCtx.sampleRate) * 1.25);
-  const mid = clamp01(bandAvg(freqData, 250, 1200, audioCtx.sampleRate) * 1.25);
-  const high = clamp01(bandAvg(freqData, 1200, 3500, audioCtx.sampleRate) * 1.25);
-
-  // suavização
-  smooth.rms = lerp(smooth.rms, rms, 0.12);
-  smooth.zcr = lerp(smooth.zcr, zcr, 0.10);
-  smooth.low = lerp(smooth.low, low, 0.10);
-  smooth.mid = lerp(smooth.mid, mid, 0.10);
-  smooth.high = lerp(smooth.high, high, 0.10);
-
-  // Heurísticas educativas (0..1)
-  const presenca = clamp01(smooth.rms);
-  const impulso = clamp01(smooth.rms * 0.65 + smooth.low * 0.35);
-  const fluxo = clamp01(0.65 * (1 - smooth.zcr) + 0.35 * smooth.rms); // menos “tremedeira”, mais fluxo
-  const constancia = clamp01(1 - Math.abs(smooth.rms - rms) * 2.2); // estabilidade do nível
-  const pausaOk = clamp01(1 - smooth.rms); // quanto mais baixo o rms, mais “pausa”
-  const entonacao = clamp01(0.45 * smooth.high + 0.55 * smooth.mid);
-  const foco = clamp01(0.55 * smooth.mid + 0.45 * (1 - smooth.high)); // reduz chiado
-  const harmonia = clamp01((presenca + fluxo + constancia) / 3);
-
-  return { presenca, impulso, fluxo, constancia, pausaOk, entonacao, foco, harmonia };
-}
-
-function renderBars(values) {
-  METRICS.forEach(m => {
-    const fill = document.querySelector(`[data-fill="${m.key}"]`);
-    const val = document.querySelector(`[data-val="${m.key}"]`);
-    const v = values[m.key] ?? 0;
-    if (fill) fill.style.width = `${Math.round(v * 100)}%`;
-    if (val) val.textContent = (v * 100).toFixed(0) + "%";
-  });
-}
-
-function ensureBarsUI() {
-  if (!barsWrap) return;
-  barsWrap.innerHTML = METRICS.map(m => {
-    const targetPct = Math.round((TARGETS[m.key] ?? 0.65) * 100);
-    return `
-      <div class="barItem">
-        <div class="barTop">
-          <div class="barName">${m.label}</div>
-          <div class="barVal" data-val="${m.key}">0%</div>
-        </div>
-        <div class="track">
-          <div class="fill" data-fill="${m.key}"></div>
-        </div>
-        <div class="target" style="--target:${targetPct}%"></div>
-        <div class="muted" style="margin-top:6px;font-size:12px">Meta: ${targetPct}%</div>
-      </div>
-    `;
-  }).join("");
-}
-
-function updateTrainUI() {
-  const total = training ? (trainAccumulated + (Date.now() - trainStartedAt) / 1000) : trainAccumulated;
-  const clamped = Math.min(TRAIN_MAX_SEC, total);
-  trainTimer.textContent = `Tempo: ${mmss(clamped)} / ${mmss(TRAIN_MAX_SEC)}`;
-  trainToken.textContent = `Tokens: ${tokensObj.tokens}`;
-}
-
-function awardTokenOnce() {
-  tokensObj.tokens = (tokensObj.tokens || 0) + 1;
-  tokensObj.updatedAt = Date.now();
-  writeJSON(STORE.TOKENS, tokensObj);
-  updateTrainUI();
-}
-
-function metaTick(values, dtSec) {
-  // Meta 1: Presença >= alvo por 15s
-  if (!meta1Done) {
-    if ((values.presenca ?? 0) >= TARGETS.presenca) meta1Sec += dtSec;
-    else meta1Sec = Math.max(0, meta1Sec - dtSec * 0.6);
-    if (meta1Sec >= 15) {
-      meta1Done = true;
-      m1ok.textContent = "concluída ✅ +1 token";
-      awardTokenOnce();
+  try{
+    if (!audio.ctx){
+      audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    m1.textContent = `${Math.min(15, Math.floor(meta1Sec))}/15s`;
-  }
-
-  // Meta 2: Fluxo >= alvo por 15s
-  if (!meta2Done) {
-    if ((values.fluxo ?? 0) >= TARGETS.fluxo) meta2Sec += dtSec;
-    else meta2Sec = Math.max(0, meta2Sec - dtSec * 0.6);
-    if (meta2Sec >= 15) {
-      meta2Done = true;
-      m2ok.textContent = "concluída ✅ +1 token";
-      awardTokenOnce();
+    if (audio.ctx.state === "suspended"){
+      await audio.ctx.resume();
     }
-    m2.textContent = `${Math.min(15, Math.floor(meta2Sec))}/15s`;
-  }
-
-  // Meta 3: Harmonia >= alvo por 20s
-  if (!meta3Done) {
-    if ((values.harmonia ?? 0) >= TARGETS.harmonia) meta3Sec += dtSec;
-    else meta3Sec = Math.max(0, meta3Sec - dtSec * 0.6);
-    if (meta3Sec >= 20) {
-      meta3Done = true;
-      m3ok.textContent = "concluída ✅ +1 token";
-      awardTokenOnce();
+    if (!audio.stream){
+      audio.stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
     }
-    m3.textContent = `${Math.min(20, Math.floor(meta3Sec))}/20s`;
-  }
-}
-
-async function enableMic() {
-  try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.6;
-
-    const src = audioCtx.createMediaStreamSource(micStream);
-    src.connect(analyser);
-
-    trainStatus.textContent = "Treino: microfone OK";
-    btnStartTrain.disabled = false;
-  } catch (e) {
-    alert("Falha ao acessar microfone. Verifique permissões do navegador.");
-  }
-}
-
-function startTrain() {
-  if (!analyser || training) return;
-
-  training = true;
-  trainStartedAt = Date.now();
-  lastFrameAt = performance.now();
-
-  btnStartTrain.disabled = true;
-  btnStopTrain.disabled = false;
-  trainStatus.textContent = "Treino: rodando";
-
-  const timeData = new Uint8Array(analyser.fftSize);
-  const freqData = new Uint8Array(analyser.frequencyBinCount);
-
-  const loop = () => {
-    rafId = requestAnimationFrame(loop);
-
-    const now = performance.now();
-    const dt = Math.min(0.2, (now - lastFrameAt) / 1000);
-    lastFrameAt = now;
-
-    // tempo total (pausar/retomar) com teto de 5min
-    const total = trainAccumulated + (Date.now() - trainStartedAt) / 1000;
-    if (total >= TRAIN_MAX_SEC) {
-      stopTrain();
-      trainStatus.textContent = "Treino: finalizado (5 min)";
-      return;
+    if (!audio.src){
+      audio.src = audio.ctx.createMediaStreamSource(audio.stream);
+    }
+    if (!audio.analyser){
+      audio.analyser = audio.ctx.createAnalyser();
+      audio.analyser.fftSize = 2048;
+      audio.analyser.smoothingTimeConstant = 0.75;
+      audio.data = new Float32Array(audio.analyser.fftSize);
+      audio.src.connect(audio.analyser);
     }
 
-    analyser.getByteTimeDomainData(timeData);
-    analyser.getByteFrequencyData(freqData);
+    audio.running = true;
+    audio.paused = false;
+    ui.pillMic.textContent = "Mic: ativo";
+    ui.pillMic.className = "pill ok";
+    ui.btnMic.textContent = "Microfone ativo";
+    ui.btnMic.disabled = true;
 
-    const values = metricsFromAudio(timeData, freqData);
-
-    renderBars(values);
-    metaTick(values, dt);
-    updateTrainUI();
-  };
-
-  loop();
-}
-
-function stopTrain() {
-  if (!training) return;
-  training = false;
-
-  const elapsed = (Date.now() - trainStartedAt) / 1000;
-  trainAccumulated = Math.min(TRAIN_MAX_SEC, trainAccumulated + elapsed);
-
-  btnStartTrain.disabled = trainAccumulated >= TRAIN_MAX_SEC;
-  btnStopTrain.disabled = true;
-
-  trainStatus.textContent = "Treino: pausado";
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = null;
-
-  updateTrainUI();
-}
-
-function resetTrainState() {
-  training = false;
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = null;
-
-  trainAccumulated = 0;
-  meta1Sec = meta2Sec = meta3Sec = 0;
-  meta1Done = meta2Done = meta3Done = false;
-
-  m1ok.textContent = "não concluída";
-  m2ok.textContent = "não concluída";
-  m3ok.textContent = "não concluída";
-  m1.textContent = "0/15s";
-  m2.textContent = "0/15s";
-  m3.textContent = "0/20s";
-
-  trainStatus.textContent = "Treino: aguardando";
-  btnStartTrain.disabled = true; // só libera após mic
-  btnStopTrain.disabled = true;
-
-  renderBars({
-    presenca: 0, impulso: 0, fluxo: 0, constancia: 0,
-    pausaOk: 0, entonacao: 0, foco: 0, harmonia: 0
-  });
-
-  updateTrainUI();
-}
-
-// ========= PROVA =========
-function levelByIndex(i) {
-  return LEVELS[Math.max(0, Math.min(LEVELS.length - 1, i))];
-}
-
-function calcScore10(levelId) {
-  const level = LEVELS.find(l => l.id === levelId);
-  if (!level) return 0;
-
-  const total = level.questions.length;
-  let correct = 0;
-  for (const q of level.questions) {
-    const a = answers[q.id];
-    if (typeof a === "number" && a === q.correct) correct++;
+  }catch(err){
+    console.error(err);
+    ui.pillMic.textContent = "Mic: bloqueado";
+    ui.pillMic.className = "pill warn";
+    ui.btnMic.disabled = false;
+    ui.btnMic.textContent = "Ativar microfone";
+    ui.coachText.textContent = "Permita o microfone no navegador (HTTPS). Se estiver no celular, tente Chrome e recarregue a página.";
   }
-  // Nota 0..10
-  return Math.round((correct / total) * 10);
 }
 
-function updateHeaderPills() {
-  pillDue.textContent = `Prova: ${fmtDate(DUE_DATE)}`;
-
-  const level = levelByIndex(currentLevel);
-  const bestScore = best[level.id] ?? 0;
-  pillBest.textContent = `Melhor: ${bestScore}/10`;
-  pillLevel.textContent = `Nível: ${currentLevel + 1}/${LEVELS.length}`;
+function pauseMic(){
+  if (!audio.running) return;
+  audio.paused = true;
+  ui.pillMic.textContent = "Mic: pausado";
+  ui.pillMic.className = "pill warn";
+  ui.btnMic.disabled = false;
+  ui.btnMic.textContent = "Retomar microfone";
 }
 
-function showScreen(name) {
-  [screenLogin, screenWelcome, screenExam, screenResult].forEach(s => s.classList.add("hidden"));
-  if (name === "login") screenLogin.classList.remove("hidden");
-  if (name === "welcome") screenWelcome.classList.remove("hidden");
-  if (name === "exam") screenExam.classList.remove("hidden");
-  if (name === "result") screenResult.classList.remove("hidden");
+function stopAll(){
+  audio.paused = true;
+  audio.running = false;
+
+  // zera barras com decay suave
+  for (const m of barState){
+    m.val = 0;
+    m.vis = 0;
+    m.hold = 0;
+  }
+  renderBars();
+
+  ui.pillMic.textContent = "Mic: pausado";
+  ui.pillMic.className = "pill warn";
+  ui.btnMic.disabled = false;
+  ui.btnMic.textContent = "Ativar microfone";
+  ui.coachText.textContent = "Sessão encerrada. Você pode salvar um relatório (últimos 5 min) e começar de novo.";
 }
 
-function renderWelcome() {
-  const n = student?.name || "Aluno";
-  welcomeText.textContent = `${n}, aqui você pode treinar e depois fazer a prova. Se não tirar 10, você tenta de novo e melhora.`;
+function computeFeatures(){
+  if (!audio.analyser || audio.paused) return null;
 
-  const level = levelByIndex(currentLevel);
-  const b = best[level.id] ?? 0;
+  audio.analyser.getFloatTimeDomainData(audio.data);
 
-  kpi1.textContent =
-`ALUNO
-nome: ${student?.name || "-"}
-turma: ${student?.className || "-"}
-tokens: ${tokensObj.tokens || 0}`;
+  // RMS (volume)
+  let sumSq = 0;
+  let zc = 0;
+  for (let i=1; i<audio.data.length; i++){
+    const x = audio.data[i];
+    sumSq += x*x;
+    if ((audio.data[i-1] >= 0 && x < 0) || (audio.data[i-1] < 0 && x >= 0)) zc++;
+  }
+  const rms = Math.sqrt(sumSq / audio.data.length);
 
-  kpi2.textContent =
-`PROVA
-nível atual: ${level.name}
-data: ${fmtDate(DUE_DATE)}
-melhor nota: ${b}/10`;
+  // proxies simples (não clínicos)
+  const energy = clamp01(rms * 12);               // normalização
+  const zcr = clamp01((zc / audio.data.length) * 6); // “agitação” / entonação proxy
 
-  updateHeaderPills();
-  updateTrainUI();
+  // “silêncio” proxy (quanto menor rms, maior silêncio)
+  const silence = clamp01(1 - (rms * 18));
+
+  return { rms, energy, zcr, silence };
 }
 
-function renderQuestion() {
-  const level = levelByIndex(currentLevel);
-  const q = level.questions[currentQ];
+/* ---------- LÓGICA DAS MÉTRICAS (heurística) ---------- */
 
-  // KPIs
-  const bestScore = best[level.id] ?? 0;
-  examKpi.textContent =
-`NÍVEL
-${level.name}
-Questão: ${currentQ + 1}/${level.questions.length}`;
+function updateMetrics(feat){
+  // base: energia e silêncio
+  const e = feat ? feat.energy : 0;
+  const s = feat ? feat.silence : 1;
+  const z = feat ? feat.zcr : 0;
 
-  examKpi2.textContent =
-`SEU MELHOR
-${bestScore}/10
-Tentativas: ilimitadas`;
+  // modo ajusta metas (sem “métrica escondida”, só comportamento)
+  const mode = ui.mode.value;
 
-  // Botões
-  btnPrev.disabled = currentQ === 0;
-  btnNext.classList.toggle("hidden", currentQ === level.questions.length - 1);
-  btnFinish.classList.toggle("hidden", currentQ !== level.questions.length - 1);
+  // 8 métricas (0..1) — heurística amigável
+  let presence   = clamp01((0.55 * (1 - z)) + (0.45 * (1 - s)));     // menos “nervoso” + menos silêncio extremo
+  let impulse    = clamp01(0.50 * e + 0.20 * z + 0.30 * (1 - s));    // energia presente
+  let flow       = clamp01(0.55 * (1 - s) + 0.45 * (1 - Math.abs(z - 0.35))); // fala contínua sem “serrote”
+  let constant   = clamp01(1 - Math.abs(e - 0.45));                  // estabilidade de energia
+  let pause      = clamp01(1 - Math.abs(s - 0.35));                  // pausas moderadas
+  let inton      = clamp01(1 - Math.abs(z - 0.35));                  // variação moderada
+  let focus      = clamp01(0.60 * constant + 0.40 * flow);
+  let harmony    = clamp01(0.45 * presence + 0.30 * pause + 0.25 * focus);
 
-  // Render
-  questionBox.innerHTML = `
-    <div class="qCard">
-      <h3 class="qTitle">${q.text}</h3>
-      <div class="options">
-        ${q.options.map((opt, idx) => {
-          const checked = answers[q.id] === idx ? "checked" : "";
-          return `
-            <label class="opt">
-              <input type="radio" name="${q.id}" value="${idx}" ${checked} />
-              <div>${opt}</div>
-            </label>
-          `;
-        }).join("")}
-      </div>
-      <p class="muted" style="margin:10px 0 0;font-size:12px">
-        Dica: não precisa ser “gênio”. Precisa aprender <b>um degrau por vez</b>.
-      </p>
-    </div>
-  `;
-
-  // bind radios
-  questionBox.querySelectorAll(`input[name="${q.id}"]`).forEach(r => {
-    r.addEventListener("change", () => {
-      answers[q.id] = Number(r.value);
-    });
-  });
-}
-
-function finishExam() {
-  const level = levelByIndex(currentLevel);
-  const score = calcScore10(level.id);
-
-  // atualiza melhor nota
-  const prevBest = best[level.id] ?? 0;
-  if (score > prevBest) {
-    best[level.id] = score;
-    writeJSON(STORE.BEST, best);
+  // ajustes por modo
+  if (mode === "presenca"){
+    // favorece calma
+    impulse *= 0.9;
+    inton   *= 0.95;
+    presence = clamp01(presence * 1.05);
+    harmony  = clamp01(harmony * 1.05);
+  } else if (mode === "foco"){
+    // favorece constância
+    constant = clamp01(constant * 1.08);
+    focus    = clamp01(focus * 1.08);
+    pause    = clamp01(pause * 0.95);
+  } else if (mode === "pausa"){
+    // favorece pausa consciente
+    pause    = clamp01(pause * 1.10);
+    presence = clamp01(presence * 1.02);
+    flow     = clamp01(flow * 0.95);
   }
 
-  // progressão simples:
-  // - se tirou >= 8, libera próximo nível (se existir)
-  // - se tirou 10, ganha 1 token (demo)
-  let msg = `Você tirou ${score}/10 no ${level.name}.`;
-  if (score === 10) {
-    tokensObj.tokens = (tokensObj.tokens || 0) + 1;
-    tokensObj.updatedAt = Date.now();
-    writeJSON(STORE.TOKENS, tokensObj);
-    msg += " Nota máxima! ✅ Você ganhou +1 token (demo).";
+  const values = [presence, impulse, flow, constant, pause, inton, focus, harmony];
+  for (let i=0; i<barState.length; i++){
+    barState[i].val = values[i];
   }
-  if (score >= 8 && currentLevel < LEVELS.length - 1) {
-    currentLevel++;
-    msg += " Você liberou o próximo nível. 🚀";
-  } else if (score < 8) {
-    msg += " Dica: tente de novo. Repetir é estudar com inteligência. 🙂";
-  }
-
-  // Resultado
-  resultText.textContent = msg;
-
-  resKpi1.textContent =
-`RESULTADO
-nota: ${score}/10
-melhor no nível: ${(best[level.id] ?? score)}/10`;
-
-  resKpi2.textContent =
-`PROGRESSO
-nível atual: ${currentLevel + 1}/${LEVELS.length}
-tokens: ${tokensObj.tokens || 0}`;
-
-  updateHeaderPills();
-  showScreen("result");
 }
 
-function resetStudent() {
-  if (!confirm("Trocar aluno? Isso limpa nome/turma neste dispositivo.")) return;
+function applyDecay(){
+  // decay visual: sobe rápido, cai devagar
+  const up = 0.35;
+  const down = 0.07;
 
-  localStorage.removeItem(STORE.STUDENT);
-  student = null;
+  for (const m of barState){
+    if (m.val >= m.vis) {
+      m.vis = m.vis + (m.val - m.vis) * up;
+    } else {
+      m.vis = m.vis - (m.vis - m.val) * down;
+    }
+    m.vis = clamp01(m.vis);
 
-  // mantém best e tokens (opcional). Se quiser zerar tudo, descomente:
-  // localStorage.removeItem(STORE.BEST);
-  // localStorage.removeItem(STORE.TOKENS);
-
-  location.reload();
+    // hold se acima da meta
+    if (m.vis >= m.goal) m.hold += DT;
+    else m.hold = Math.max(0, m.hold - DT * 0.6);
+  }
 }
 
+function renderBars(){
+  for (const m of barState){
+    const fill = document.getElementById(`fill_${m.id}`);
+    const val = document.getElementById(`val_${m.id}`);
+    if (fill) fill.style.width = `${Math.round(m.vis * 100)}%`;
+    if (val) val.textContent = fmt1(m.vis);
+  }
+}
 
-// ========= NAV =========
-function connect() {
-  const name = (studentName.value || "").trim();
-  const className = (studentClass.value || "").trim();
-  if (!name) {
-    alert("Digite seu nome.");
+/* ---------- METAS + TOKEN (3 metas) ---------- */
+
+let goalState = {
+  earned: 0,
+  lastEarnTs: 0
+};
+
+function updateGoalsAndCoach(){
+  // metas: cumprir 3 condições simples por ~4s cada
+  // 1) Presença acima da meta por 4s
+  // 2) Constância acima da meta por 4s
+  // 3) Harmonia acima da meta por 4s
+  const needHold = 4.0;
+
+  const pres = barState[0];
+  const cons = barState[3];
+  const harm = barState[7];
+
+  let earned = 0;
+  if (pres.hold >= needHold) earned++;
+  if (cons.hold >= needHold) earned++;
+  if (harm.hold >= needHold) earned++;
+
+  goalState.earned = earned;
+  ui.pillGoal.textContent = `Meta: ${earned}/3`;
+
+  // se completou as 3, dá 1 token e reseta holds (com cooldown)
+  const cooldownMs = 8000;
+  const okToPay = (nowTs() - goalState.lastEarnTs) > cooldownMs;
+
+  if (earned >= 3 && okToPay){
+    goalState.lastEarnTs = nowTs();
+    addTokens(1);
+
+    // reseta para “o cara ter que fazer de novo”
+    for (const m of barState) m.hold = 0;
+
+    ui.coachText.textContent =
+      "✅ Mandou bem. Você completou 3 metas de estabilidade e ganhou 1 token. Repita tentando manter mais suave, sem pressa.";
     return;
   }
-  student = { id: uid(), name, className, connectedAt: Date.now() };
-  writeJSON(STORE.STUDENT, student);
 
-  showScreen("welcome");
-  renderWelcome();
-}
-
-function goExam() {
-  answers = {};
-  currentQ = 0;
-  showScreen("exam");
-  renderQuestion();
-  updateHeaderPills();
-}
-
-function retryExam() {
-  // refaz prova do nível atual (não “volta nível”)
-  answers = {};
-  currentQ = 0;
-  showScreen("exam");
-  renderQuestion();
-}
-
-function backHome() {
-  showScreen("welcome");
-  renderWelcome();
-}
-
-// ========= BOOT =========
-(function init() {
-  // logo
-  if (elLogo) elLogo.src = LOGO_SRC;
-
-  // pills
-  updateHeaderPills();
-
-  // bars UI
-  ensureBarsUI();
-
-  // tokens
-  trainToken.textContent = `Tokens: ${tokensObj.tokens || 0}`;
-
-  // se já tem aluno salvo, vai direto
-  if (student?.name) {
-    showScreen("welcome");
-    renderWelcome();
-  } else {
-    showScreen("login");
+  // coach textual simples (não médico)
+  if (!audio.running || audio.paused){
+    ui.coachText.textContent =
+      "Ative o microfone. Fale 20–30s. Tente manter as barras acima do tracinho (meta) sem forçar.";
+    return;
   }
 
-  // binds
-  btnConnect?.addEventListener("click", connect);
-  btnGoExam?.addEventListener("click", goExam);
+  if (earned === 0){
+    ui.coachText.textContent =
+      "Comece devagar. Fale com calma, sem correr. Respire e retome. Procure estabilidade (subir e ficar).";
+  } else if (earned === 1){
+    ui.coachText.textContent =
+      "Boa. Agora tente manter por mais alguns segundos. Menos pressa, mais constância.";
+  } else if (earned === 2){
+    ui.coachText.textContent =
+      "Quase lá. Só manter! Respire, fale com clareza e deixe a curva estabilizar.";
+  } else {
+    ui.coachText.textContent =
+      "✅ Metas completas. Se não cair, você ganha token (tem um pequeno cooldown).";
+  }
+}
 
-  btnPrev?.addEventListener("click", () => {
-    currentQ = Math.max(0, currentQ - 1);
-    renderQuestion();
-  });
-  btnNext?.addEventListener("click", () => {
-    const level = levelByIndex(currentLevel);
-    currentQ = Math.min(level.questions.length - 1, currentQ + 1);
-    renderQuestion();
-  });
-  btnFinish?.addEventListener("click", finishExam);
-  btnRetry?.addEventListener("click", retryExam);
-  btnBackHome?.addEventListener("click", backHome);
-  btnResetStudent?.addEventListener("click", resetStudent);
+/* ---------- BUFFER (últimos 5 min) para relatório ---------- */
 
-  // treino
-  resetTrainState();
+let ring = []; // {t, vals:[8]}
+function pushRing(){
+  const t = nowTs();
+  const vals = barState.map(m => m.vis);
+  ring.push({ t, vals });
 
-  btnMic?.addEventListener("click", async () => {
-    await enableMic();
-    // Se habilitou mic, libera start
-    if (analyser) {
-      btnStartTrain.disabled = trainAccumulated >= TRAIN_MAX_SEC;
+  // mantém só WINDOW_SEC
+  const minT = t - WINDOW_SEC * 1000;
+  while (ring.length && ring[0].t < minT) ring.shift();
+}
+
+function saveReport(){
+  // relatório simples: pega resumo + série
+  const name = (ui.studentName.value || "").trim();
+  const mode = ui.mode.value;
+
+  const series = ring.slice(0); // clone
+  if (!series.length){
+    alert("Sem dados ainda. Ative o microfone e fale um pouco antes de salvar.");
+    return;
+  }
+
+  // médias
+  const avg = new Array(8).fill(0);
+  for (const p of series){
+    for (let i=0; i<8; i++) avg[i] += p.vals[i];
+  }
+  for (let i=0; i<8; i++) avg[i] /= series.length;
+
+  const report = {
+    id: `lv_${nowTs()}`,
+    createdAt: new Date().toISOString(),
+    name,
+    mode,
+    tokensAtSave: getTokens(),
+    avg,
+    series
+  };
+
+  let reports = readJSON(LS.reports, []);
+  reports.unshift(report);
+  reports = reports.slice(0, MAX_REPORTS);
+  writeJSON(LS.reports, reports);
+
+  alert("Relatório salvo no dispositivo (localStorage). Abra 'Relatórios' para ver.");
+}
+
+/* ---------- PROVA VALE 10 (iniciante real) ---------- */
+
+const BANK = [
+  // Nível 0
+  [
+    {
+      q: "O que é um algoritmo?",
+      a: 1,
+      c: [
+        "Um tipo de computador",
+        "Um passo a passo para resolver um problema",
+        "Um cabo de internet",
+        "Um aplicativo de celular"
+      ],
+      tip: "Algoritmo é uma receita: passos em ordem."
+    },
+    {
+      q: "Um bit é:",
+      a: 2,
+      c: [
+        "Uma letra do teclado",
+        "Um arquivo de vídeo",
+        "A menor unidade de informação (0 ou 1)",
+        "Um botão do mouse"
+      ],
+      tip: "Computadores trabalham com 0 e 1."
+    },
+    {
+      q: "Para que serve uma linguagem de programação?",
+      a: 0,
+      c: [
+        "Para dar instruções ao computador de forma organizada",
+        "Para aumentar o volume do microfone",
+        "Para desenhar no Canva",
+        "Para conectar no Wi-Fi"
+      ],
+      tip: "É o jeito humano de escrever instruções."
+    },
+    {
+      q: "O que significa 'entrada' em um programa?",
+      a: 3,
+      c: [
+        "O final do código",
+        "A bateria do celular",
+        "A tela do computador",
+        "Informações que o programa recebe (ex: nome, número)"
+      ],
+      tip: "Entrada = o que chega; saída = o que o programa entrega."
     }
-  });
-
-  btnStartTrain?.addEventListener("click", () => {
-    if (!analyser) {
-      alert("Ative o microfone primeiro.");
-      return;
+  ],
+  // Nível 1
+  [
+    {
+      q: "Qual é a ordem correta de um algoritmo simples?",
+      a: 0,
+      c: [
+        "Entrada → Processamento → Saída",
+        "Saída → Entrada → Processamento",
+        "Processamento → Saída → Entrada",
+        "Entrada → Saída → Processamento"
+      ],
+      tip: "Primeiro recebe, depois pensa, depois mostra."
+    },
+    {
+      q: "Se eu quiser repetir uma ação várias vezes, eu uso:",
+      a: 2,
+      c: [
+        "Uma cor",
+        "Um emoji",
+        "Um laço/repetição (loop)",
+        "Um print da tela"
+      ],
+      tip: "Loop repete. Ex: repetir 10 vezes."
+    },
+    {
+      q: "Um 'bug' é:",
+      a: 1,
+      c: [
+        "Uma música",
+        "Um erro no programa (comportamento inesperado)",
+        "Um tipo de teclado",
+        "Um botão do GitHub"
+      ],
+      tip: "Bug é erro. Corrigir é depurar."
+    },
+    {
+      q: "Em um 'se... então...', isso é:",
+      a: 3,
+      c: [
+        "Um desenho",
+        "Um arquivo",
+        "Um cabo",
+        "Uma condição/decisão (if/else)"
+      ],
+      tip: "Condição decide qual caminho seguir."
     }
-    startTrain();
-  });
+  ],
+  // Nível 2 (JS inicial)
+  [
+    {
+      q: "No JavaScript, para mostrar algo na tela do console, usamos:",
+      a: 2,
+      c: [
+        "print()",
+        "echo()",
+        "console.log()",
+        "say()"
+      ],
+      tip: "console.log('Olá') é o básico do básico."
+    },
+    {
+      q: "Qual é um exemplo de variável?",
+      a: 0,
+      c: [
+        "let idade = 15;",
+        "if (idade) {}",
+        "for (i=0;i<10;i++){}",
+        "function(){}"
+      ],
+      tip: "Variável guarda um valor."
+    },
+    {
+      q: "Qual é a ideia de uma função?",
+      a: 1,
+      c: [
+        "Escolher uma cor",
+        "Reusar um bloco de passos com um nome",
+        "Aumentar o Wi-Fi",
+        "Salvar um print"
+      ],
+      tip: "Função = um “mini algoritmo” reaproveitável."
+    },
+    {
+      q: "Um comentário em JS começa com:",
+      a: 3,
+      c: [
+        "##",
+        "@@",
+        "$$",
+        "//"
+      ],
+      tip: "// isso é um comentário"
+    }
+  ]
+];
 
-  btnStopTrain?.addEventListener("click", () => {
-    stopTrain();
-  });
+let quiz = {
+  running: false,
+  level: 0,
+  idx: 0,
+  score: 0,
+  answers: [],
+  order: []
+};
 
-  // ao sair da página, encerra mic
-  window.addEventListener("beforeunload", () => {
-    try { if (micStream) micStream.getTracks().forEach(t => t.stop()); } catch {}
-    try { if (audioCtx) audioCtx.close(); } catch {}
+function loadBest(){
+  const best = readJSON(LS.best, null);
+  if (!best){
+    ui.bestText.textContent = "Ainda não há melhor nota salva.";
+    return;
+  }
+  ui.bestText.innerHTML =
+    `Maior nota: <b>${best.best10}</b> / 10 • Tentativas: <b>${best.tries}</b> • Última: <b>${new Date(best.lastAt).toLocaleString()}</b>`;
+}
+
+function resetBest(){
+  localStorage.removeItem(LS.best);
+  loadBest();
+  alert("Melhor nota zerada (apenas neste dispositivo).");
+}
+
+function startQuiz(){
+  const lvl = Number(ui.level.value || "0");
+  quiz.running = true;
+  quiz.level = lvl;
+  quiz.idx = 0;
+  quiz.score = 0;
+  quiz.answers = [];
+
+  // ordem fixa por enquanto (pode randomizar depois)
+  quiz.order = BANK[lvl].map((_, i) => i);
+
+  ui.quizBox.style.display = "block";
+  ui.quizResult.style.display = "none";
+  ui.btnNext.style.display = "none";
+  ui.btnSubmit.style.display = "inline-block";
+
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = BANK[quiz.level][quiz.order[quiz.idx]];
+  ui.qTitle.textContent = `Questão ${quiz.idx + 1} / ${quiz.order.length} — ${q.q}`;
+  ui.choices.innerHTML = "";
+
+  q.c.forEach((txt, i) => {
+    const div = document.createElement("label");
+    div.className = "choice";
+    div.innerHTML = `<input type="radio" name="q" value="${i}"> <div>${txt}</div>`;
+    ui.choices.appendChild(div);
   });
-})();
+}
+
+function submitAnswer(){
+  const sel = ui.choices.querySelector('input[name="q"]:checked');
+  if (!sel){
+    alert("Escolha uma alternativa.");
+    return;
+  }
+
+  const chosen = Number(sel.value);
+  const q = BANK[quiz.level][quiz.order[quiz.idx]];
+  const ok = chosen === q.a;
+
+  if (ok) quiz.score++;
+
+  ui.quizResult.style.display = "block";
+  ui.quizResult.innerHTML =
+    `<div style="font-weight:950">${ok ? "✅ Acertou" : "❌ Errou"}</div>
+     <div class="muted" style="margin-top:4px">${q.tip}</div>`;
+
+  ui.btnSubmit.style.display = "none";
+  ui.btnNext.style.display = "inline-block";
+}
+
+function nextQuestion(){
+  ui.quizResult.style.display = "none";
+  ui.btnSubmit.style.display = "inline-block";
+  ui.btnNext.style.display = "none";
+
+  quiz.idx++;
+  if (quiz.idx >= quiz.order.length){
+    finishQuiz();
+    return;
+  }
+  renderQuestion();
+}
+
+function finishQuiz(){
+  quiz.running = false;
+
+  // nota vale 10
+  const total = quiz.order.length;
+  const raw = quiz.score / total;       // 0..1
+  const grade10 = Math.round(raw * 10); // inteiro 0..10
+
+  // salva melhor nota
+  let best = readJSON(LS.best, { best10: 0, tries: 0, lastAt: nowTs() });
+  best.tries = (best.tries || 0) + 1;
+  best.lastAt = nowTs();
+  if (grade10 > (best.best10 || 0)) best.best10 = grade10;
+  writeJSON(LS.best, best);
+  loadBest();
+
+  // incentivo de token: se tirou 10, ganha 1 token (demo)
+  if (grade10 === 10) addTokens(1);
+
+  ui.quizBox.style.display = "block";
+  ui.qTitle.textContent = "Prova finalizada";
+  ui.choices.innerHTML = "";
+
+  ui.quizResult.style.display = "block";
+  ui.quizResult.innerHTML =
+    `<div style="font-weight:950">Sua nota: ${grade10} / 10</div>
+     <div class="muted" style="margin-top:4px">
+       Você pode refazer quantas vezes quiser. O sistema guarda a maior nota.
+       ${grade10 === 10 ? "<br><b>✅ Nota 10! Você ganhou 1 token (demo).</b>" : ""}
+     </div>`;
+
+  ui.btnSubmit.style.display = "none";
+  ui.btnNext.style.display = "none";
+}
+
+/* ---------- LOOP PRINCIPAL ---------- */
+
+function tick(){
+  const feat = computeFeatures();
+  updateMetrics(feat);
+  applyDecay();
+  renderBars();
+  updateGoalsAndCoach();
+
+  // buffer pra relatório
+  if (audio.running && !audio.paused){
+    pushRing();
+  }
+
+  setTimeout(tick, Math.round(1000 / FPS));
+}
+
+/* ---------- INIT ---------- */
+
+function init(){
+  // data default: hoje
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  ui.testDate.value = `${yyyy}-${mm}-${dd}`;
+
+  buildBars();
+  renderTokens();
+  loadBest();
+
+  ui.btnMic.addEventListener("click", startMic);
+  ui.btnPause.addEventListener("click", () => {
+    if (!audio.running) return;
+    if (audio.paused) sta
