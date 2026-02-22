@@ -3,242 +3,398 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lion Vibes — Prova Vale 10 (Demo)</title>
-  <link rel="stylesheet" href="assets/styles.css" />
+  <title>Vibração de Leão • Prova Vale 10</title>
+
+  <!-- Se você já tiver assets/styles.css, pode manter -->
+  <!-- <link rel="stylesheet" href="assets/styles.css" /> -->
+
   <style>
-    /* Pequeno ajuste local: centralização e leitura boa (sem depender do styles.css) */
-    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
-    .center { text-align: center; }
-    .cardX {
-      background: rgba(255,255,255,0.78);
-      border: 1px solid rgba(0,0,0,0.06);
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-      backdrop-filter: blur(8px);
+    :root{
+      --bg1:#f7fffe; --bg2:#f3fbff; --bg3:#f4fff7;
+      --ink:#0b1b24; --muted:#51616c;
+      --card:rgba(255,255,255,.82); --stroke:rgba(10,30,40,.10);
+      --shadow:0 12px 35px rgba(0,0,0,.08);
+      --primary:#0ea5e9; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
     }
-    .muted { opacity: .78; }
-    .row { display: grid; gap: 12px; }
-    .row2 { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
-    @media (max-width: 820px){ .row2{ grid-template-columns:1fr; } }
-    .field label { display:block; font-weight: 700; margin-bottom: 6px; }
-    .field input, .field select, .field textarea {
-      width: 100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(0,0,0,0.12);
-      outline: none;
-      background: rgba(255,255,255,0.92);
-      font-size: 16px;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
     }
-    .btn {
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-weight: 800;
-      cursor: pointer;
+    .bg{
+      position:fixed; inset:0;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(14,165,233,.12), transparent 60%),
+        radial-gradient(900px 500px at 80% 20%, rgba(34,197,94,.12), transparent 60%),
+        radial-gradient(900px 500px at 50% 90%, rgba(6,182,212,.10), transparent 60%);
+      pointer-events:none;
     }
-    .btn.primary { background: #bfefff; }
-    .btn.soft { background: rgba(0,0,0,0.06); }
-    .btn.danger { background: #ffd2d2; }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-    .pill {
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.06);
-      font-weight: 800;
+    .wrap{
+      min-height:100%;
+      display:grid;
+      place-items:center;
+      padding:18px 16px 70px;
+      position:relative;
+      z-index:1;
     }
-    .gridPills { display:flex; gap:10px; flex-wrap: wrap; justify-content:center; }
-    .qBox {
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.88);
+    .card{
+      width:min(980px, 100%);
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:18px;
     }
-    .qTitle { font-weight: 900; margin-bottom: 10px; }
-    .opt { display:flex; gap:10px; align-items:flex-start; padding: 8px 8px; border-radius: 12px; }
-    .opt:hover { background: rgba(0,0,0,0.04); }
-    .opt input { margin-top: 4px; }
-    .kpi {
-      background: rgba(0,0,0,0.05);
-      border-radius: 16px;
-      padding: 12px;
-      font-weight: 900;
-      text-align:center;
+    .top{
+      display:flex; gap:14px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:10px;
     }
-    .hr { height:1px; background: rgba(0,0,0,0.08); margin: 14px 0; }
-    .small { font-size: 13px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .footerX { margin-top: 14px; text-align:center; opacity:.7; font-size: 12px; }
-    .note {
-      border-radius: 16px;
-      background: rgba(255, 246, 207, 0.9);
-      border: 1px solid rgba(0,0,0,0.08);
-      padding: 12px;
-      font-weight: 700;
+    .brand{display:flex; gap:12px; align-items:center}
+    .logoBox{
+      width:54px; height:54px; border-radius:16px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.7);
+      display:grid; place-items:center;
+      overflow:hidden;
+      flex: 0 0 auto;
     }
+    .logoBox img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .title{font-weight:900; letter-spacing:.2px; font-size:18px}
+    .sub{color:var(--muted); font-size:12px; line-height:1.25}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .pill{
+      font-size:12px; padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.65);
+    }
+    .pill.ok{border-color:rgba(34,197,94,.25)}
+    .pill.warn{border-color:rgba(245,158,11,.25)}
+    .pill.info{border-color:rgba(14,165,233,.25)}
+    .pill.bad{border-color:rgba(239,68,68,.25)}
+    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width:780px){ .grid2{grid-template-columns:1fr} }
+
+    .muted{color:var(--muted); line-height:1.35}
+    .field{display:grid; gap:6px; margin-top:10px}
+    label{font-size:13px; color:var(--muted)}
+    input, select, textarea{
+      border:1px solid var(--stroke);
+      border-radius:12px;
+      padding:12px;
+      background:rgba(255,255,255,.90);
+      outline:none;
+      font-size:14px;
+    }
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(14,165,233,.35);
+      box-shadow: 0 0 0 4px rgba(14,165,233,.12);
+    }
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .btn{
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      padding:12px 14px;
+      background:rgba(255,255,255,.85);
+      cursor:pointer;
+      font-weight:750;
+    }
+    .btn.primary{
+      border-color: rgba(14,165,233,.25);
+      background: linear-gradient(135deg, rgba(14,165,233,.18), rgba(34,197,94,.12));
+    }
+    .btn.danger{
+      border-color: rgba(239,68,68,.25);
+      background: rgba(239,68,68,.10);
+    }
+    .btn:disabled{opacity:.55; cursor:not-allowed}
+
+    .hr{border:none; border-top:1px solid var(--stroke); margin:14px 0}
+
+    /* Quiz */
+    .qCard{
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:14px;
+      background: rgba(255,255,255,.62);
+      margin-top:12px;
+    }
+    .qTitle{font-weight:900; margin:0 0 6px}
+    .options{display:grid; gap:8px; margin-top:10px}
+    .opt{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:10px;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      background: rgba(255,255,255,.72);
+      cursor:pointer;
+    }
+    .opt input{margin-top:3px}
+    .kpi{
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      background: rgba(255,255,255,.65);
+      font-family: var(--mono);
+      font-size:12px;
+      white-space:pre-line;
+    }
+
+    /* “barrinhas” (8 métricas visuais simples) */
+    .bars{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media (max-width:780px){ .bars{grid-template-columns:1fr} }
+
+    .barItem{
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:10px;
+      background: rgba(255,255,255,.60);
+    }
+    .barTop{display:flex; justify-content:space-between; gap:10px}
+    .barName{font-weight:800; font-size:13px}
+    .barVal{font-family: var(--mono); font-size:12px; color: var(--muted)}
+    .track{
+      height:12px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.75);
+      overflow:hidden;
+      margin-top:8px;
+    }
+    .fill{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(14,165,233,.35), rgba(34,197,94,.35));
+      transition: width .18s linear;
+    }
+    .target{
+      position:relative;
+      height:0;
+    }
+    .target::after{
+      content:"";
+      position:absolute;
+      left: var(--target, 70%);
+      top:-12px;
+      width:2px;
+      height:36px;
+      background: rgba(245,158,11,.55);
+      border-radius:2px;
+    }
+
+    .footer{
+      position:fixed; left:0; right:0; bottom:0;
+      padding:10px 16px;
+      font-size:12px;
+      color:var(--muted);
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(10px);
+      border-top:1px solid var(--stroke);
+      z-index:2;
+    }
+
+    .center{ text-align:center }
+    .hidden{ display:none !important }
   </style>
 </head>
+
 <body>
+  <div class="bg"></div>
+
   <div class="wrap">
-    <div class="cardX">
-      <div class="center">
-        <div class="pill" style="font-size:18px;">LV</div>
-        <h1 style="margin:10px 0 6px;">Lion Vibes — Prova Vale 10</h1>
-        <p class="muted" style="margin:0;">
-          Demo educacional (programação básica). O aluno pode refazer — <b>vale a maior nota</b>.
+    <div class="card">
+
+      <!-- Header -->
+      <div class="top">
+        <div class="brand">
+          <div class="logoBox">
+            <!-- TROQUE AQUI PELO NOME REAL DA SUA LOGO -->
+            <img id="logoImg" src="logo.jpg" alt="Logo" />
+          </div>
+          <div>
+            <div class="title">Vibração de Leão</div>
+            <div class="sub">Prova Vale 10 • Incentivo real (sem enganação) • Demo GitHub Pages</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="pill info" id="pillDue">Prova: --/--/----</div>
+          <div class="pill ok" id="pillBest">Melhor: --/10</div>
+          <div class="pill warn" id="pillLevel">Nível: --</div>
+        </div>
+      </div>
+
+      <!-- Login simples -->
+      <section id="screenLogin">
+        <h2 class="center" style="margin:6px 0 6px">Bem-vindo 👋</h2>
+        <p class="muted center" style="margin:0 0 10px">
+          Entre com seu nome. Você pode refazer a prova quantas vezes quiser.
+          O sistema guarda sua <b>maior nota</b>.
         </p>
-      </div>
 
-      <div class="hr"></div>
-
-      <!-- TOP STATUS -->
-      <div class="gridPills" style="margin-bottom:12px;">
-        <div class="pill" id="pillDate">📅 Prova: --/--/----</div>
-        <div class="pill" id="pillBest">🏆 Melhor nota: --/10</div>
-        <div class="pill" id="pillAttempts">🔁 Tentativas: --</div>
-      </div>
-
-      <!-- SETUP -->
-      <section id="setup" class="row">
-        <div class="note">
-          <b>Incentivo:</b> você pode fazer quantas vezes quiser. Se não tirar 10, o sistema te chama pra estudar e tentar de novo.
-          <span class="small">(Não é punição. É treino.)</span>
-        </div>
-
-        <div class="row2">
+        <div class="grid2">
           <div class="field">
-            <label for="studentName">Nome do aluno</label>
-            <input id="studentName" placeholder="Ex: Paulo" autocomplete="name" />
+            <label for="studentName">Seu nome</label>
+            <input id="studentName" placeholder="Ex: Anissa" />
           </div>
+
           <div class="field">
-            <label for="turma">Turma / Sala (opcional)</label>
-            <input id="turma" placeholder="Ex: 1º Ano A" />
+            <label for="studentClass">Turma (opcional)</label>
+            <input id="studentClass" placeholder="Ex: 1º Ano" />
           </div>
         </div>
 
-        <div class="row2">
-          <div class="field">
-            <label for="examTitle">Título da prova</label>
-            <input id="examTitle" placeholder="Ex: Lógica 01 — Variáveis e Condições" />
+        <div class="actions" style="justify-content:center">
+          <button class="btn primary" id="btnConnect">Iniciar conexão</button>
+        </div>
+
+        <p class="muted center" style="margin-top:10px;font-size:12px">
+          Privacidade demo: seus dados ficam só neste dispositivo (localStorage).
+        </p>
+      </section>
+
+      <!-- Tela incentivo -->
+      <section id="screenWelcome" class="hidden">
+        <h2 class="center" style="margin:6px 0 6px">Prova Vale 10 ✅</h2>
+        <p class="muted center" style="margin:0 0 10px" id="welcomeText"></p>
+
+        <div class="grid2">
+          <div class="kpi" id="kpi1">--</div>
+          <div class="kpi" id="kpi2">--</div>
+        </div>
+
+        <hr class="hr"/>
+
+        <h3 class="center" style="margin:0 0 6px">Treino ao vivo (8 barras)</h3>
+        <p class="muted center" style="margin:0 0 10px">
+          Fale em voz normal e observe as barras. Não é “médico”. É treino de fala, foco e ritmo.
+        </p>
+
+        <div class="actions" style="justify-content:center">
+          <button class="btn" id="btnMic">Ativar microfone</button>
+          <button class="btn primary" id="btnStartTrain" disabled>Iniciar treino (até 5 min)</button>
+          <button class="btn" id="btnStopTrain" disabled>Pausar</button>
+        </div>
+
+        <div class="row" style="justify-content:center; margin-top:8px">
+          <div class="pill info" id="trainStatus">Treino: aguardando</div>
+          <div class="pill ok" id="trainTimer">Tempo: 00:00 / 05:00</div>
+          <div class="pill warn" id="trainToken">Tokens: --</div>
+        </div>
+
+        <div class="bars" id="bars"></div>
+
+        <hr class="hr"/>
+
+        <h3 class="center" style="margin:0 0 6px">Mini metas (ganha tokens)</h3>
+        <p class="muted center" style="margin:0 0 10px">
+          Se você mantiver um bom desempenho por alguns segundos, ganha 1 token.
+          (Isso é demo — depois vira sistema completo.)
+        </p>
+
+        <div class="grid2">
+          <div class="qCard">
+            <div class="qTitle">Meta 1 — Presença</div>
+            <div class="muted">Fale com calma por 15s mantendo “Presença” acima da linha alvo.</div>
+            <div class="row" style="margin-top:8px">
+              <span class="pill info" id="m1">0/15s</span>
+              <span class="pill ok" id="m1ok">não concluída</span>
+            </div>
           </div>
-          <div class="field">
-            <label for="examDate">Data da prova</label>
-            <input id="examDate" type="date" />
+
+          <div class="qCard">
+            <div class="qTitle">Meta 2 — Fluxo</div>
+            <div class="muted">Fale sem pressa por 15s mantendo “Fluxo” acima da linha alvo.</div>
+            <div class="row" style="margin-top:8px">
+              <span class="pill info" id="m2">0/15s</span>
+              <span class="pill ok" id="m2ok">não concluída</span>
+            </div>
           </div>
         </div>
 
-        <div class="field">
-          <label for="mode">Modo</label>
-          <select id="mode">
-            <option value="treino">Treino (refaz e guarda maior nota)</option>
-            <option value="simulado">Simulado (mesmas regras, mas mostra tempo)</option>
-          </select>
+        <div class="qCard">
+          <div class="qTitle">Meta 3 — Harmonia</div>
+          <div class="muted">Leia um texto curto (abaixo) por 20s mantendo “Harmonia” acima da linha alvo.</div>
+          <p class="muted" style="margin-top:8px">
+            Texto: “Eu consigo aprender aos poucos. Hoje eu melhoro um pouco. Amanhã eu melhoro mais.”
+          </p>
+          <div class="row" style="margin-top:8px">
+            <span class="pill info" id="m3">0/20s</span>
+            <span class="pill ok" id="m3ok">não concluída</span>
+          </div>
         </div>
 
-        <div class="row2">
-          <button class="btn primary" id="btnStart">Começar prova</button>
-          <button class="btn soft" id="btnGoReports">Meus resultados</button>
-        </div>
-
-        <div class="footerX">
-          Ética: demo educacional. Sem diagnóstico. Sem coleta externa — tudo salvo no dispositivo (localStorage).
+        <div class="actions" style="justify-content:center">
+          <button class="btn primary" id="btnGoExam">Ir para a Prova</button>
         </div>
       </section>
 
-      <!-- QUIZ -->
-      <section id="quiz" style="display:none">
-        <div class="row2" style="align-items:center">
-          <div class="kpi">
-            <div class="small muted">Tempo</div>
-            <div id="timer" style="font-size:22px;">00:00</div>
-          </div>
-          <div class="kpi">
-            <div class="small muted">Progresso</div>
-            <div id="progress" style="font-size:22px;">0/0</div>
-          </div>
+      <!-- Prova -->
+      <section id="screenExam" class="hidden">
+        <h2 style="margin:6px 0 6px">Prova (vale 10)</h2>
+        <p class="muted" style="margin:0 0 10px">
+          Nível bem básico. Você pode tentar de novo sempre.
+          <b>O sistema guarda a maior nota.</b>
+        </p>
+
+        <div class="grid2">
+          <div class="kpi" id="examKpi">--</div>
+          <div class="kpi" id="examKpi2">--</div>
         </div>
 
-        <div class="hr"></div>
+        <div id="questionBox"></div>
 
-        <div id="questionHost"></div>
-
-        <div class="hr"></div>
-
-        <div class="row2">
-          <button class="btn soft" id="btnPrev">Voltar</button>
+        <div class="actions">
+          <button class="btn" id="btnPrev">Voltar</button>
           <button class="btn primary" id="btnNext">Próxima</button>
-        </div>
-
-        <div class="row" style="margin-top:12px;">
-          <button class="btn danger" id="btnQuit">Encerrar prova (salva e volta)</button>
-        </div>
-
-        <div class="footerX small">
-          Dica: se errar, anota o tema, estuda 10 minutos e tenta de novo. O sistema guarda tua melhor.
+          <button class="btn primary hidden" id="btnFinish">Finalizar</button>
+          <button class="btn danger" id="btnResetStudent">Trocar aluno</button>
         </div>
       </section>
 
-      <!-- RESULTS -->
-      <section id="results" style="display:none">
-        <div class="center">
-          <h2 style="margin:0 0 6px;">Resultado</h2>
-          <p class="muted" id="resultMeta" style="margin:0;"></p>
+      <!-- Resultado -->
+      <section id="screenResult" class="hidden">
+        <h2 style="margin:6px 0 6px">Resultado</h2>
+        <p class="muted" id="resultText" style="margin:0 0 10px"></p>
+
+        <div class="grid2">
+          <div class="kpi" id="resKpi1">--</div>
+          <div class="kpi" id="resKpi2">--</div>
         </div>
 
-        <div class="row2" style="margin-top:12px;">
-          <div class="kpi" id="kScore">Nota: --/10</div>
-          <div class="kpi" id="kBest">Melhor: --/10</div>
+        <div class="actions">
+          <button class="btn primary" id="btnRetry">Tentar de novo</button>
+          <button class="btn" id="btnBackHome">Voltar ao painel</button>
         </div>
 
-        <div class="hr"></div>
-
-        <div id="feedback" class="note"></div>
-
-        <div class="hr"></div>
-
-        <div class="row2">
-          <button class="btn primary" id="btnRetry">Refazer (tentar melhorar)</button>
-          <button class="btn soft" id="btnBackHome">Voltar ao início</button>
-        </div>
-
-        <div class="row" style="margin-top:10px;">
-          <button class="btn soft" id="btnReview">Revisar minhas respostas</button>
-        </div>
-
-        <div id="reviewBox" style="display:none; margin-top:12px;"></div>
-      </section>
-
-      <!-- REPORTS -->
-      <section id="reports" style="display:none">
-        <div class="center">
-          <h2 style="margin:0 0 6px;">Meus resultados</h2>
-          <p class="muted" style="margin:0;">Histórico no dispositivo. Mostra tentativas e melhor nota.</p>
-        </div>
-
-        <div class="hr"></div>
-
-        <div id="reportHost"></div>
-
-        <div class="hr"></div>
-
-        <div class="row2">
-          <button class="btn soft" id="btnBackFromReports">Voltar</button>
-          <button class="btn danger" id="btnClearAll">Apagar histórico</button>
-        </div>
-
-        <div class="footerX">
-          Para o demo: isso prova o “loop de incentivo” (refazer → estudar → melhorar). Depois a IA pode adaptar exercícios.
-        </div>
+        <hr class="hr"/>
+        <p class="muted" style="font-size:12px">
+          Este app é educacional. Não é diagnóstico, não é avaliação clínica.
+          É incentivo à aprendizagem e ao treino de fala/ritmo.
+        </p>
       </section>
 
     </div>
   </div>
 
-  <script src="assets/app.js"></script>
+  <footer class="footer">
+    <span>Vibração de Leão • Demo • Salva localmente • “Prova vale 10”</span>
+  </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
