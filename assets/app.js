@@ -696,6 +696,7 @@ function tick(){
   setTimeout(tick, Math.round(1000 / FPS));
 }
 
+
 /* ---------- INIT ---------- */
 
 function init(){
@@ -713,4 +714,38 @@ function init(){
   ui.btnMic.addEventListener("click", startMic);
   ui.btnPause.addEventListener("click", () => {
     if (!audio.running) return;
-    if (audio.paused) sta
+    if (audio.paused) startMic();
+    else pauseMic();
+  });
+  ui.btnStop.addEventListener("click", stopAll);
+  ui.btnSave.addEventListener("click", saveReport);
+
+  ui.btnStartQuiz.addEventListener("click", startQuiz);
+  ui.btnResetBest.addEventListener("click", resetBest);
+
+  ui.btnSubmit.addEventListener("click", submitAnswer);
+  ui.btnNext.addEventListener("click", nextQuestion);
+
+  ui.mode.addEventListener("change", () => {
+    // pequenas metas por modo (ajusta goals)
+    const v = ui.mode.value;
+    if (v === "presenca"){
+      barState[0].goal = 0.55; // presença
+      barState[3].goal = 0.55; // constância
+      barState[7].goal = 0.55; // harmonia
+    } else if (v === "foco"){
+      barState[0].goal = 0.50;
+      barState[3].goal = 0.60;
+      barState[7].goal = 0.55;
+    } else {
+      barState[0].goal = 0.50;
+      barState[3].goal = 0.52;
+      barState[7].goal = 0.58;
+    }
+    layoutGoals();
+  });
+
+  tick();
+}
+
+init();
