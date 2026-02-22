@@ -3,118 +3,242 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lion Vibes — Sessão</title>
+  <title>Lion Vibes — Prova Vale 10 (Demo)</title>
   <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    /* Pequeno ajuste local: centralização e leitura boa (sem depender do styles.css) */
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .center { text-align: center; }
+    .cardX {
+      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      backdrop-filter: blur(8px);
+    }
+    .muted { opacity: .78; }
+    .row { display: grid; gap: 12px; }
+    .row2 { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 820px){ .row2{ grid-template-columns:1fr; } }
+    .field label { display:block; font-weight: 700; margin-bottom: 6px; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,0.12);
+      outline: none;
+      background: rgba(255,255,255,0.92);
+      font-size: 16px;
+    }
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn.primary { background: #bfefff; }
+    .btn.soft { background: rgba(0,0,0,0.06); }
+    .btn.danger { background: #ffd2d2; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .pill {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.06);
+      font-weight: 800;
+    }
+    .gridPills { display:flex; gap:10px; flex-wrap: wrap; justify-content:center; }
+    .qBox {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.88);
+    }
+    .qTitle { font-weight: 900; margin-bottom: 10px; }
+    .opt { display:flex; gap:10px; align-items:flex-start; padding: 8px 8px; border-radius: 12px; }
+    .opt:hover { background: rgba(0,0,0,0.04); }
+    .opt input { margin-top: 4px; }
+    .kpi {
+      background: rgba(0,0,0,0.05);
+      border-radius: 16px;
+      padding: 12px;
+      font-weight: 900;
+      text-align:center;
+    }
+    .hr { height:1px; background: rgba(0,0,0,0.08); margin: 14px 0; }
+    .small { font-size: 13px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .footerX { margin-top: 14px; text-align:center; opacity:.7; font-size: 12px; }
+    .note {
+      border-radius: 16px;
+      background: rgba(255, 246, 207, 0.9);
+      border: 1px solid rgba(0,0,0,0.08);
+      padding: 12px;
+      font-weight: 700;
+    }
+  </style>
 </head>
 <body>
-  <div class="bg"></div>
-
-  <main class="container">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo" id="logoBox"></div>
-        <div>
-          <div class="brand-title">Lion Vibes</div>
-          <div class="brand-sub">Sessão ao vivo • até 5 minutos por relatório</div>
-        </div>
-      </div>
-      <nav class="nav">
-        <a class="link" href="welcome.html">Início</a>
-        <a class="link" href="report.html">Relatórios</a>
-      </nav>
-    </header>
-
-    <section class="card">
-      <div class="row" style="justify-content:space-between; align-items:flex-start; gap:12px;">
-        <div>
-          <h1>Sessão</h1>
-          <p class="muted" style="margin-top:6px">
-            Fale naturalmente. O gráfico mostra 8 linhas com “decay” suave e uma meta (linha tracejada).
-            Você treina estabilidade, pausa consciente e clareza.
-          </p>
-        </div>
-
-        <div class="pillBox">
-          <div class="pill info" id="pillTime">00:00</div>
-          <div class="pill ok" id="pillToken">Tokens: 0</div>
-          <div class="pill warn" id="pillMic">Mic: off</div>
-        </div>
+  <div class="wrap">
+    <div class="cardX">
+      <div class="center">
+        <div class="pill" style="font-size:18px;">LV</div>
+        <h1 style="margin:10px 0 6px;">Lion Vibes — Prova Vale 10</h1>
+        <p class="muted" style="margin:0;">
+          Demo educacional (programação básica). O aluno pode refazer — <b>vale a maior nota</b>.
+        </p>
       </div>
 
-      <div class="grid2" style="margin-top:10px">
-        <div class="field">
-          <label>Seu nome (opcional)</label>
-          <input id="who" placeholder="Ex: Paulo" />
+      <div class="hr"></div>
+
+      <!-- TOP STATUS -->
+      <div class="gridPills" style="margin-bottom:12px;">
+        <div class="pill" id="pillDate">📅 Prova: --/--/----</div>
+        <div class="pill" id="pillBest">🏆 Melhor nota: --/10</div>
+        <div class="pill" id="pillAttempts">🔁 Tentativas: --</div>
+      </div>
+
+      <!-- SETUP -->
+      <section id="setup" class="row">
+        <div class="note">
+          <b>Incentivo:</b> você pode fazer quantas vezes quiser. Se não tirar 10, o sistema te chama pra estudar e tentar de novo.
+          <span class="small">(Não é punição. É treino.)</span>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="studentName">Nome do aluno</label>
+            <input id="studentName" placeholder="Ex: Paulo" autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="turma">Turma / Sala (opcional)</label>
+            <input id="turma" placeholder="Ex: 1º Ano A" />
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="examTitle">Título da prova</label>
+            <input id="examTitle" placeholder="Ex: Lógica 01 — Variáveis e Condições" />
+          </div>
+          <div class="field">
+            <label for="examDate">Data da prova</label>
+            <input id="examDate" type="date" />
+          </div>
         </div>
 
         <div class="field">
-          <label>Modo de treino</label>
+          <label for="mode">Modo</label>
           <select id="mode">
-            <option value="presenca">Presença (calma + estabilidade)</option>
-            <option value="foco">Foco (clareza + constância)</option>
-            <option value="harmonia">Harmonia (ritmo equilibrado)</option>
+            <option value="treino">Treino (refaz e guarda maior nota)</option>
+            <option value="simulado">Simulado (mesmas regras, mas mostra tempo)</option>
           </select>
         </div>
-      </div>
 
-      <div class="row" style="justify-content:space-between; margin-top:10px; gap:10px; flex-wrap:wrap;">
-        <div class="actions" style="gap:10px;">
-          <button class="btn primary" id="btnStart">Iniciar microfone</button>
-          <button class="btn" id="btnPause" disabled>Pausar</button>
-          <button class="btn danger" id="btnStop" disabled>Encerrar</button>
+        <div class="row2">
+          <button class="btn primary" id="btnStart">Começar prova</button>
+          <button class="btn soft" id="btnGoReports">Meus resultados</button>
         </div>
 
-        <div class="actions" style="gap:10px;">
-          <button class="btn" id="btnSnapshot" disabled>Salvar relatório (últimos 5 min)</button>
+        <div class="footerX">
+          Ética: demo educacional. Sem diagnóstico. Sem coleta externa — tudo salvo no dispositivo (localStorage).
         </div>
-      </div>
+      </section>
 
-      <div class="card soft" style="margin-top:12px">
-        <div class="row" style="justify-content:space-between; align-items:center;">
-          <div style="font-weight:900">Overlay (8 linhas)</div>
-          <div class="muted" style="font-size:12px">Meta = tracejado • Decay = queda lenta</div>
-        </div>
-
-        <div class="canvasWrap">
-          <canvas id="cv" width="900" height="420"></canvas>
-        </div>
-
-        <div class="grid2" style="margin-top:10px">
-          <div class="card soft">
-            <div style="font-weight:900">Dicas rápidas</div>
-            <p class="muted" style="margin-top:6px">
-              • Fale sem correr.<br/>
-              • Pausa curta antes de responder melhora o controle.<br/>
-              • Se ficar “muito alto”, afaste o mic um pouco.<br/>
-              • Se ficar “muito baixo”, aproxime e articule.
-            </p>
+      <!-- QUIZ -->
+      <section id="quiz" style="display:none">
+        <div class="row2" style="align-items:center">
+          <div class="kpi">
+            <div class="small muted">Tempo</div>
+            <div id="timer" style="font-size:22px;">00:00</div>
           </div>
-
-          <div class="card soft">
-            <div style="font-weight:900">Meta e Token</div>
-            <p class="muted" style="margin-top:6px">
-              Se você mantém a sessão acima da meta por alguns segundos, ganha 1 token interno.
-              É só gamificação do treino (não tem valor financeiro).
-            </p>
-            <div class="mini" style="margin-top:8px">
-              <div class="pill ok" id="pillScore">Score: --</div>
-              <div class="pill info" id="pillGoal">Meta: --</div>
-            </div>
+          <div class="kpi">
+            <div class="small muted">Progresso</div>
+            <div id="progress" style="font-size:22px;">0/0</div>
           </div>
         </div>
-      </div>
 
-      <p class="muted" style="font-size:12px;margin-top:10px">
-        Importante: isso é feedback heurístico (sinal/ritmo). Não é avaliação clínica.
-      </p>
-    </section>
-  </main>
+        <div class="hr"></div>
 
-  <script src="assets/core.js"></script>
+        <div id="questionHost"></div>
+
+        <div class="hr"></div>
+
+        <div class="row2">
+          <button class="btn soft" id="btnPrev">Voltar</button>
+          <button class="btn primary" id="btnNext">Próxima</button>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn danger" id="btnQuit">Encerrar prova (salva e volta)</button>
+        </div>
+
+        <div class="footerX small">
+          Dica: se errar, anota o tema, estuda 10 minutos e tenta de novo. O sistema guarda tua melhor.
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="results" style="display:none">
+        <div class="center">
+          <h2 style="margin:0 0 6px;">Resultado</h2>
+          <p class="muted" id="resultMeta" style="margin:0;"></p>
+        </div>
+
+        <div class="row2" style="margin-top:12px;">
+          <div class="kpi" id="kScore">Nota: --/10</div>
+          <div class="kpi" id="kBest">Melhor: --/10</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div id="feedback" class="note"></div>
+
+        <div class="hr"></div>
+
+        <div class="row2">
+          <button class="btn primary" id="btnRetry">Refazer (tentar melhorar)</button>
+          <button class="btn soft" id="btnBackHome">Voltar ao início</button>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn soft" id="btnReview">Revisar minhas respostas</button>
+        </div>
+
+        <div id="reviewBox" style="display:none; margin-top:12px;"></div>
+      </section>
+
+      <!-- REPORTS -->
+      <section id="reports" style="display:none">
+        <div class="center">
+          <h2 style="margin:0 0 6px;">Meus resultados</h2>
+          <p class="muted" style="margin:0;">Histórico no dispositivo. Mostra tentativas e melhor nota.</p>
+        </div>
+
+        <div class="hr"></div>
+
+        <div id="reportHost"></div>
+
+        <div class="hr"></div>
+
+        <div class="row2">
+          <button class="btn soft" id="btnBackFromReports">Voltar</button>
+          <button class="btn danger" id="btnClearAll">Apagar histórico</button>
+        </div>
+
+        <div class="footerX">
+          Para o demo: isso prova o “loop de incentivo” (refazer → estudar → melhorar). Depois a IA pode adaptar exercícios.
+        </div>
+      </section>
+
+    </div>
+  </div>
+
   <script src="assets/app.js"></script>
-  <script>
-    LV.requireAuth();
-    LV.mountLogo("logoBox");
-  </script>
 </body>
 </html>
