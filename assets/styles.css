@@ -218,3 +218,11 @@ canvas{ display:block; width:100%; height:auto; }
   border-left: 2px dashed rgba(0,0,0,.35);
   left: 65%;
 }
+
+/* Centralização “clean” */
+.container { max-width: 980px; margin: 0 auto; padding: 18px; }
+.card { text-align: left; }
+.centerText { text-align: center; }
+
+.heroTitle { font-size: 42px; line-height: 1.05; margin: 0 0 8px; }
+.heroSub { margin: 0; opacity: .85; }
