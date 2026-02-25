@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vibrações de Leão • Configurações</title>
+  <meta name="theme-color" content="#dff4f6" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="config">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <h1>Configurações</h1>
+        <p>Ajustes simples para escola • Metas fáceis e tempo de gravação</p>
+        <div class="nav">
+          <a href="./index.html">Início</a>
+          <a href="./oral.html">Oral</a>
+          <a href="./prova.html">Prova</a>
+          <a href="./relatorio.html">Relatório</a>
+          <a href="./coordenacao.html">Coordenação</a>
+        </div>
+      </div>
+      <div class="logo" title="Logo">
+        <img alt="Logo" src="./IMG-20260218-WA0015.jpg" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sectionTitle">
+        <h2>Parâmetros</h2>
+        <div class="badge">padrão escolar</div>
+      </div>
+
+      <div class="field">
+        <div>
+          <label>Tempo máximo por resposta oral (segundos)</label>
+          <input id="cfgMaxSec" type="number" min="8" max="45" step="1" />
+        </div>
+        <div>
+          <label>Meta (segundos acima da linha)</label>
+          <input id="cfgGoalSec" type="number" min="2" max="10" step="1" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div>
+          <label>Linha-alvo (0 a 1)</label>
+          <input id="cfgTarget" type="number" min="0.40" max="0.90" step="0.05" />
+        </div>
+        <div>
+          <label>Ganho de fala (1 a 3)</label>
+          <input id="cfgGain" type="number" min="1" max="3" step="0.1" />
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="primary" id="btnSaveCfg">Salvar</button>
+        <button class="ghost" id="btnResetCfg">Restaurar padrão</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="small">
+        Dica: para crianças e iniciantes, metas curtas funcionam melhor.
+      </div>
+    </div>
+  </div>
+
+  <script defer src="./app.js"></script>
+</body>
+</html>
