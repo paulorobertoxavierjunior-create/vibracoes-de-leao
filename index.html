@@ -5,269 +5,36 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Vibrações de Leão • Prova vale 10</title>
   <meta name="theme-color" content="#dff4f6" />
-  <style>
-    :root{
-      --bg1:#dff4f6;
-      --bg2:#eaf7e3;
-      --card:#ffffffd9;
-      --ink:#0a2a2f;
-      --muted:#4a6b70;
-      --line:#cfe4e7;
-      --accent:#66c7c0;
-      --accent2:#7bd490;
-      --warn:#ffcc66;
-      --danger:#ff7a7a;
-      --shadow: 0 10px 30px rgba(0,0,0,.08);
-      --r:18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--ink);
-      background: radial-gradient(1200px 900px at 20% 0%, var(--bg2) 0%, transparent 60%),
-                  radial-gradient(900px 700px at 90% 20%, var(--bg1) 0%, transparent 55%),
-                  linear-gradient(180deg, #e9fbff 0%, #f7fbff 100%);
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      padding:18px;
-    }
-    .wrap{width:min(980px, 100%);}
-    .topbar{
-      display:flex; align-items:flex-start; justify-content:space-between;
-      gap:12px; margin-bottom:12px;
-    }
-    .brand h1{margin:0; font-size:22px; letter-spacing:.2px}
-    .brand p{margin:4px 0 0; color:var(--muted); font-size:13px}
-    .logo{
-      width:56px; height:56px; border-radius:14px;
-      background:#fff;
-      border:1px solid var(--line);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      flex:0 0 auto;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .logo img{width:100%; height:100%; object-fit:cover;}
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--r);
-      box-shadow: var(--shadow);
-      padding:16px;
-      backdrop-filter: blur(8px);
-    }
-    .row{display:grid; grid-template-columns: 1.2fr .8fr; gap:14px;}
-    @media (max-width:860px){ .row{grid-template-columns:1fr} }
-    .pillbar{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
-    .pill{
-      border:1px solid var(--line);
-      padding:7px 10px;
-      border-radius:999px;
-      color:var(--muted);
-      background:#ffffffcc;
-      font-size:12px;
-    }
-    .pill strong{color:var(--ink)}
-    .centerTitle{
-      margin:8px 0 6px;
-      font-size:34px; letter-spacing:.2px;
-    }
-    .subtitle{color:var(--muted); margin:0 0 12px}
-    .field{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin:10px 0 12px;}
-    @media (max-width:520px){ .field{grid-template-columns:1fr} }
-    label{font-size:12px; color:var(--muted); display:block; margin:0 0 6px}
-    input, select{
-      width:100%;
-      border:1px solid var(--line);
-      background:#fff;
-      padding:12px 12px;
-      border-radius:14px;
-      outline:none;
-      font-size:14px;
-    }
-    input:focus, select:focus{border-color:#9fd9dd; box-shadow:0 0 0 4px rgba(102,199,192,.16)}
-    .btns{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
-    button{
-      border:1px solid var(--line);
-      background:#fff;
-      padding:12px 14px;
-      border-radius:14px;
-      font-weight:700;
-      cursor:pointer;
-      transition: transform .04s ease;
-    }
-    button:active{transform: translateY(1px)}
-    .primary{background: linear-gradient(90deg, #bfeff0, #cbeed7); border-color:#b8e2e4}
-    .danger{background: #ffe7e7; border-color:#ffd0d0}
-    .ghost{background:#ffffffcc}
-    .disabled{opacity:.45; pointer-events:none}
-    .divider{height:1px; background:var(--line); margin:14px 0}
-    .kpi{
-      display:grid; grid-template-columns: repeat(3, 1fr);
-      gap:10px; margin:10px 0 0;
-    }
-    @media (max-width:640px){ .kpi{grid-template-columns:1fr} }
-    .kpi .box{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px;
-      background:#ffffffcc;
-      color:var(--muted);
-      font-size:12px;
-    }
-    .kpi .box strong{color:var(--ink); font-size:16px; display:block; margin-top:2px}
-
-    /* Barras (8 métricas) */
-    .metrics h3{margin:0 0 4px; font-size:18px}
-    .metrics p{margin:0 0 10px; color:var(--muted)}
-    .barList{display:grid; gap:10px; margin-top:10px}
-    .barRow{
-      display:grid;
-      grid-template-columns: 160px 1fr 60px;
-      gap:10px;
-      align-items:center;
-    }
-    @media (max-width:520px){
-      .barRow{grid-template-columns: 1fr; gap:6px}
-      .barRow .val{justify-self:end}
-    }
-    .barLabel{font-weight:800}
-    .track{
-      height:14px;
-      border-radius:999px;
-      background:#eaf2f3;
-      border:1px solid var(--line);
-      position:relative;
-      overflow:hidden;
-    }
-    .fill{
-      height:100%;
-      width:0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius:999px;
-      transition: width .12s linear;
-    }
-    .targetLine{
-      position:absolute; top:-2px; bottom:-2px;
-      width:2px; background:#2b3a3d33;
-      left:65%;
-      border-radius:2px;
-    }
-    .val{color:var(--muted); font-variant-numeric: tabular-nums; justify-self:end}
-
-    .metaBox{
-      margin-top:12px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      background:#ffffffcc;
-    }
-    .metaBox h4{margin:0 0 6px}
-    .metaItem{display:flex; gap:10px; align-items:flex-start; margin:6px 0; color:var(--muted)}
-    .dot{
-      width:12px; height:12px; border-radius:999px;
-      margin-top:4px; border:1px solid var(--line);
-      background:#fff;
-      flex:0 0 auto;
-    }
-    .dot.ok{background:#bff0c9; border-color:#a7e7b5}
-    .metaNote{margin-top:8px; color:var(--muted); font-size:12px}
-    .small{font-size:12px; color:var(--muted)}
-    .badge{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid var(--line);
-      background:#ffffffcc;
-      font-size:12px; color:var(--muted);
-    }
-    .badge strong{color:var(--ink)}
-    .sectionTitle{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-      margin:0 0 10px;
-    }
-    .sectionTitle h2{margin:0; font-size:22px}
-    .hint{color:var(--muted); font-size:12px}
-    .qCard{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      background:#ffffffcc;
-    }
-    .qLine{
-      display:flex; justify-content:space-between; align-items:center;
-      gap:10px; margin-bottom:10px;
-      color:var(--muted);
-      font-size:13px;
-    }
-    .qText{
-      font-size:16px; font-weight:900;
-      padding:12px;
-      border-radius:14px;
-      background:#ffffff;
-      border:1px dashed #cfe4e7;
-    }
-    .statusLine{margin-top:8px; color:var(--muted); font-size:12px}
-    .writeGrid{display:grid; gap:10px}
-    .questionBlock{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      background:#ffffffcc;
-    }
-    .questionBlock h4{margin:0 0 8px}
-    .opt{display:block; margin:6px 0; color:var(--ink)}
-    .opt input{margin-right:8px}
-    .footer{
-      margin-top:12px; text-align:center; color:var(--muted); font-size:12px;
-    }
-    .hide{display:none !important;}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-    textarea{
-      width:100%; min-height:140px; resize:vertical;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px;
-      background:#fff;
-      font-size:12px;
-    }
-  </style>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
-
-<body>
+<body data-page="home">
   <div class="wrap">
     <div class="topbar">
       <div class="brand">
         <h1>Vibrações de Leão</h1>
-        <p>Prova Vale 10 • Oral + Escrita • Refaça quantas vezes quiser e guarde a maior nota</p>
+        <p>Prova vale 10 • Oral (destravar) → Escrita (marcar) → Relatório</p>
         <div class="pillbar">
           <span class="pill">Prova: <strong id="kDate">--/--/----</strong></span>
           <span class="pill">Melhor: <strong id="kBest">--/10</strong></span>
-          <span class="pill">Nível: <strong id="kLevel">Iniciante</strong></span>
-          <span class="pill">Tokens (demo): <strong id="kTokens">0</strong></span>
+          <span class="pill">Tokens: <strong id="kTokens">0</strong></span>
         </div>
       </div>
-
       <div class="logo" title="Logo">
-        <img id="logoImg" alt="Logo" src="./IMG-20260218-WA0015.jpg" />
+        <img alt="Logo" src="./IMG-20260218-WA0015.jpg" />
       </div>
     </div>
 
     <div class="row">
-      <!-- ESQUERDA: fluxo (entrada + fases) -->
       <div class="card">
-        <h2 class="centerTitle" id="mainTitle">Bem-vindo 👋</h2>
-        <p class="subtitle" id="mainSub">
-          Entre com seu nome. Você pode refazer a prova quantas vezes quiser. O sistema guarda sua <b>maior nota</b>.
-          <br><span class="small">Privacidade demo: tudo fica neste dispositivo (localStorage). Relatório para coordenação é <b>anonimizado</b>.</span>
+        <h2 class="centerTitle">Entrada</h2>
+        <p class="subtitle">
+          Pouca coisa na tela. Entra, começa, faz. O sistema guarda sua <b>maior nota</b>.
         </p>
 
         <div class="field">
           <div>
             <label>Seu nome (opcional)</label>
-            <input id="inpName" placeholder="Ex: Paulo" />
+            <input id="inpName" placeholder="Ex: João" />
           </div>
           <div>
             <label>Turma (opcional)</label>
@@ -276,141 +43,38 @@
         </div>
 
         <div class="btns">
-          <button class="primary" id="btnStart">Iniciar</button>
-          <button class="ghost" id="btnResetAll" title="Zera dados locais">Zerar tudo</button>
-          <button class="ghost" id="btnGoCoord" title="Relatório anon. para coordenação">Página Coordenação</button>
+          <button class="primary" id="btnGoOral">Começar (Fase oral)</button>
+          <a class="ghost" href="./prova.html" style="display:inline-block; text-decoration:none; text-align:center; padding:12px 14px; border-radius:14px; border:1px solid var(--line); font-weight:800; color:var(--muted); background:#ffffffcc;">Ir direto para prova</a>
         </div>
 
         <div class="divider"></div>
 
-        <!-- FASE ORAL -->
-        <div id="oralArea" class="hide">
-          <div class="sectionTitle">
-            <h2>Fase oral</h2>
-            <div class="badge"><span>tempo:</span> <strong id="oralClock" class="mono">00:00</strong></div>
-          </div>
-
-          <div class="hint">
-            Responda <b>uma por vez</b>. Clique em <b>Ativar microfone</b>, depois <b>Gravar resposta</b>.
-            Se não souber: diga <b>"não sei"</b> e avance.
-          </div>
-
-          <div style="height:10px"></div>
-
-          <div class="qCard">
-            <div class="qLine">
-              <div><b>Pergunta</b> <span id="qPos">1/5</span></div>
-              <div>microfone: <span id="micState">desligado</span></div>
-            </div>
-            <div class="qText" id="qText">…</div>
-
-            <div class="btns">
-              <button id="btnMic" class="primary">Ativar microfone</button>
-              <button id="btnRec" class="ghost">Gravar resposta (15s)</button>
-              <button id="btnSkip" class="ghost">Não sei / Pular</button>
-              <button id="btnEndOral" class="danger">Encerrar oral</button>
-            </div>
-
-            <div class="statusLine" id="oralStatus">Dica: ambiente calmo ajuda.</div>
-          </div>
-
-          <div class="kpi">
-            <div class="box">Resposta (palavras) <strong id="kWords">0</strong></div>
-            <div class="box">Duração (s) <strong id="kDur">0.0</strong></div>
-            <div class="box">Ritmo (palavras/min) <strong id="kWpm">0</strong></div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="btns">
-            <button id="btnGoWrite" class="primary disabled">Ir para fase escrita</button>
-            <button id="btnRestartOral" class="ghost">Recomeçar oral</button>
-          </div>
+        <div class="btns">
+          <a class="ghost" href="./relatorio.html" style="display:inline-block; text-decoration:none; text-align:center; padding:12px 14px; border-radius:14px; border:1px solid var(--line); font-weight:800; color:var(--muted); background:#ffffffcc;">Relatório</a>
+          <a class="ghost" href="./coordenacao.html" style="display:inline-block; text-decoration:none; text-align:center; padding:12px 14px; border-radius:14px; border:1px solid var(--line); font-weight:800; color:var(--muted); background:#ffffffcc;">Coordenação</a>
+          <a class="ghost" href="./config.html" style="display:inline-block; text-decoration:none; text-align:center; padding:12px 14px; border-radius:14px; border:1px solid var(--line); font-weight:800; color:var(--muted); background:#ffffffcc;">Config</a>
+          <button class="danger" id="btnResetAll" title="Zera dados locais">Zerar tudo</button>
         </div>
 
-        <!-- FASE ESCRITA -->
-        <div id="writeArea" class="hide">
-          <div class="sectionTitle">
-            <h2>Fase escrita (vale 10)</h2>
-            <div class="badge">tentativa: <strong id="kTry">1</strong></div>
-          </div>
-
-          <p class="subtitle">
-            Agora você marca as alternativas. Pode refazer quantas vezes quiser. O sistema guarda a <b>maior nota</b>.
-          </p>
-
-          <div class="writeGrid" id="writeGrid"></div>
-
-          <div class="btns">
-            <button id="btnGrade" class="primary">Corrigir e ver nota</button>
-            <button id="btnNewTry" class="ghost">Nova tentativa (outras perguntas)</button>
-            <button id="btnBackOral" class="ghost">Voltar para oral</button>
-          </div>
-
-          <div class="statusLine" id="writeStatus"></div>
-        </div>
-
-        <!-- COORDENAÇÃO -->
-        <div id="coordArea" class="hide">
-          <div class="sectionTitle">
-            <h2>Página Coordenação (anonimizado)</h2>
-            <div class="badge">sessão: <strong id="kSess" class="mono">—</strong></div>
-          </div>
-
-          <p class="subtitle">
-            Aqui saem <b>metadados anônimos</b> da sessão para ajudar ações pedagógicas e psicopedagógicas.
-            Não vai nome, não vai áudio, não vai “quem é”.
-          </p>
-
-          <div class="btns">
-            <button id="btnBuildReport" class="primary">Gerar relatório anonimizado</button>
-            <button id="btnDownloadReport" class="ghost disabled">Baixar JSON</button>
-            <button id="btnCopyReport" class="ghost disabled">Copiar JSON</button>
-            <button id="btnBackApp" class="ghost">Voltar</button>
-          </div>
-
-          <div style="height:10px"></div>
-          <textarea id="reportBox" placeholder="O JSON aparece aqui…"></textarea>
-          <div class="footer">Demo educacional • HTML/CSS/JS (GitHub Pages)</div>
-        </div>
-
-        <div class="footer" id="globalFoot">
-          Vibrações de Leão • Demo educacional • Não é diagnóstico • É incentivo e consciência
-        </div>
+        <div class="footer">Vibrações de Leão • Incentivo à coragem, constância e clareza</div>
       </div>
 
-      <!-- DIREITA: espelho (barras) + metas -->
       <div class="card metrics">
         <h3>Seu “espelho” (8 barras)</h3>
-        <p>
-          Elas sobem rápido e descem devagar (suavização). Não é diagnóstico — é treino de autoconsciência.
-        </p>
+        <p>Elas sobem com <b>fala</b> (palavras/tempo) e descem devagar quando você para.</p>
 
         <div class="barList" id="barList"></div>
 
         <div class="metaBox">
-          <h4>Metas simples</h4>
-          <div class="metaItem">
-            <div class="dot" id="m1Dot"></div>
-            <div>Meta 1: manter <b>Foco</b> acima da linha por <b>4s</b></div>
-          </div>
-          <div class="metaItem">
-            <div class="dot" id="m2Dot"></div>
-            <div>Meta 2: manter <b>Constância</b> acima da linha por <b>4s</b></div>
-          </div>
-          <div class="metaItem">
-            <div class="dot" id="m3Dot"></div>
-            <div>Meta 3: manter <b>Harmonia</b> acima da linha por <b>4s</b></div>
-          </div>
-          <div class="metaNote">
-            Ao completar as 3 metas na fase oral, você ganha <b>+1 token demo</b>.
-          </div>
+          <h4>Metas fáceis</h4>
+          <div class="metaItem"><div class="dot" id="m1Dot"></div><div>Meta 1: manter <b>Foco</b> acima da linha por <b>4s</b></div></div>
+          <div class="metaItem"><div class="dot" id="m2Dot"></div><div>Meta 2: manter <b>Constância</b> acima da linha por <b>4s</b></div></div>
+          <div class="metaItem"><div class="dot" id="m3Dot"></div><div>Meta 3: manter <b>Harmonia</b> acima da linha por <b>4s</b></div></div>
+          <div class="metaNote">Complete as 3 metas na fase oral e ganhe <b>+1 token</b>.</div>
         </div>
 
         <div class="divider"></div>
-        <div class="small">
-          Linha-alvo é só referência visual. O importante é <b>subir com calma</b> e manter um ritmo estável.
-        </div>
+        <div class="small">Você só precisa falar com calma. Se não souber, diga “não sei” e siga.</div>
       </div>
     </div>
   </div>
