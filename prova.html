@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vibrações de Leão • Prova</title>
+  <meta name="theme-color" content="#dff4f6" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="prova">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <h1>Prova vale 10</h1>
+        <p>Marque as alternativas • Refaça quantas vezes quiser • Guarda a maior nota</p>
+        <div class="pillbar">
+          <span class="pill">Melhor: <strong id="kBest">--/10</strong></span>
+          <span class="pill">Última: <strong id="kLast">--/10</strong></span>
+          <span class="pill">Tokens: <strong id="kTokens">0</strong></span>
+        </div>
+        <div class="nav">
+          <a href="./index.html">Início</a>
+          <a href="./oral.html">Oral</a>
+          <a href="./relatorio.html">Relatório</a>
+          <a href="./coordenacao.html">Coordenação</a>
+        </div>
+      </div>
+      <div class="logo" title="Logo">
+        <img alt="Logo" src="./IMG-20260218-WA0015.jpg" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sectionTitle">
+        <h2>Perguntas</h2>
+        <div class="badge">tentativa: <strong id="kTry">1</strong></div>
+      </div>
+
+      <p class="subtitle">
+        Você precisa <b>marcar</b> para avançar. Se errar, refaça e aprenda.
+      </p>
+
+      <div class="writeGrid" id="writeGrid"></div>
+
+      <div class="divider"></div>
+
+      <div class="btns">
+        <button class="primary" id="btnCorrigir">Corrigir e ver nota</button>
+        <button class="ghost" id="btnNova">Nova tentativa (muda perguntas)</button>
+        <a class="ghost" href="./relatorio.html" style="display:inline-block; text-decoration:none; text-align:center; padding:12px 14px; border-radius:14px; border:1px solid var(--line); font-weight:800; color:var(--muted); background:#ffffffcc;">Ir para relatório</a>
+      </div>
+
+      <div class="statusLine" id="provaStatus"></div>
+      <div class="footer">A maior nota fica guardada. O objetivo é crescer.</div>
+    </div>
+  </div>
+
+  <script defer src="./app.js"></script>
+</body>
+</html>
